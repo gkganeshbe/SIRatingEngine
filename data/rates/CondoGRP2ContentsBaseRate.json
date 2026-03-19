@@ -1,0 +1,72 @@
+[
+    {
+        "Key1":  "1",
+        "Key2":  "FRAME",
+        "Key3":  "B",
+        "Factor":  0.099,
+        "EffStart":  "2026-02-01"
+    },
+    {
+        "Key1":  "1",
+        "Key2":  "JOISTEDMASONRY",
+        "Key3":  "B",
+        "Factor":  0.099,
+        "EffStart":  "2026-02-01"
+    },
+    {
+        "Key1":  "1",
+        "Key2":  "NONCOMBUSTIBLE",
+        "Key3":  "B",
+        "Factor":  0.099,
+        "EffStart":  "2026-02-01"
+    },
+    {
+        "Key1":  "1",
+        "Key2":  "MASONRYNONCOMB",
+        "Key3":  "B",
+        "Factor":  0.099,
+        "EffStart":  "2026-02-01"
+    },
+    {
+        "Key1":  "1",
+        "Key2":  "FIRERESISTIVE",
+        "Key3":  "AB",
+        "Factor":  0.09,
+        "EffStart":  "2026-02-01"
+    },
+    {
+        "Key1":  "2",
+        "Key2":  "FRAME",
+        "Key3":  "B",
+        "Factor":  0.13,
+        "EffStart":  "2026-02-01"
+    },
+    {
+        "Key1":  "2",
+        "Key2":  "JOISTEDMASONRY",
+        "Key3":  "B",
+        "Factor":  0.13,
+        "EffStart":  "2026-02-01"
+    },
+    {
+        "Key1":  "2",
+        "Key2":  "NONCOMBUSTIBLE",
+        "Key3":  "B",
+        "Factor":  0.13,
+        "EffStart":  "2026-02-01"
+    },
+    {
+        "Key1":  "2",
+        "Key2":  "MASONRYNONCOMB",
+        "Key3":  "B",
+        "Factor":  0.13,
+        "EffStart":  "2026-02-01"
+    },
+    {
+        "Key1":  "2",
+        "Key2":  "FIRERESISTIVE",
+        "Key3":  "AB",
+        "Factor":  0.116,
+        "EffStart":  "2026-02-01"
+    }
+]

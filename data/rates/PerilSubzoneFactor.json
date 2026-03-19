@@ -1,0 +1,16 @@
+[
+  {
+    "Key1": "FIRE",
+    "Key2": "08525",
+    "Key3": "SZ1",
+    "Factor": 1.05,
+    "EffStart": "2026-01-01"
+  },
+  {
+    "Key1": "HURRICANE",
+    "Key2": "08525",
+    "Key3": "SZ1",
+    "Factor": 1.3,
+    "EffStart": "2026-01-01"
+  }
+]

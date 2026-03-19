@@ -1,0 +1,255 @@
+{
+  "_scenario": [
+    "HO-3 policy – NJ owner-occupied SFD. Three endorsement periods in a 2026 policy year.",
+    "Segment 1 (Jan 01 – Apr 15, 104 days): inception, no pool, no canines.",
+    "Segment 2 (Apr 15 – Sep 01, 139 days): insured installs a pool; CovA/B/D limits bumped.",
+    "Segment 3 (Sep 01 – Jan 01, 122 days): insured acquires 2 dogs; CovA/B/C/D limits bumped.",
+    "Property snapshot is shared by ALL coverages within each segment.",
+    "NOTE: Only the PRIMARY coverage config exists today; COV-B/C/D/E are illustrative."
+  ],
+  "productCode": "HO-PRIMARY",
+  "policyFrom": "2026-01-01",
+  "policyTo": "2027-01-01",
+  "segments": [
+    {
+      "_label": "Segment 1 – Inception (104 days)",
+      "from": "2026-01-01",
+      "to": "2026-04-15",
+      "effectiveDate": "2026-01-01",
+      "property": {
+        "occupancy": "OWNER",
+        "zone": "Z1",
+        "subZone": "SZ1",
+        "policyForm": "HO3",
+        "state": "NJ",
+        "zip": "08525",
+        "protectionClass": 3,
+        "construction": "FRM",
+        "externalCladding": "STD",
+        "roof": "SHINGLE",
+        "hasPool": false,
+        "poolCount": 0,
+        "hasTrampoline": false,
+        "trampolineCount": 0,
+        "hasCanines": false,
+        "canineCount": 0,
+        "seasonal": false,
+        "seasonalMonths": 0,
+        "claimFreeYears": 5,
+        "noOfFamilies": 1,
+        "structureType": "SFD"
+      },
+      "coverages": [
+        {
+          "id": "PRIMARY",
+          "name": "Coverage A – Dwelling",
+          "params": {
+            "CoverageA": "350000",
+            "AmountBand": ">250k",
+            "DeductiblePct": "0.01",
+            "DeductibleFlat": "1000"
+          }
+        },
+        {
+          "id": "COV-B",
+          "name": "Coverage B – Other Structures",
+          "params": {
+            "CoverageB": "35000",
+            "DeductiblePct": "0.01",
+            "DeductibleFlat": "1000"
+          }
+        },
+        {
+          "id": "COV-C",
+          "name": "Coverage C – Personal Property",
+          "params": {
+            "CoverageC": "175000",
+            "LossSettlement": "ACV",
+            "DeductiblePct": "0.01",
+            "DeductibleFlat": "1000"
+          }
+        },
+        {
+          "id": "COV-D",
+          "name": "Coverage D – Loss of Use",
+          "params": {
+            "CoverageD": "70000"
+          }
+        },
+        {
+          "id": "COV-E",
+          "name": "Coverage E – Personal Liability",
+          "params": {
+            "LiabilityLimit": "300000",
+            "MedPayLimit": "5000"
+          }
+        }
+      ]
+    },
+    {
+      "_label": "Segment 2 – Endorsement 1: pool installed, CovA/B/D limits bumped (139 days)",
+      "_changes": [
+        "property.hasPool: false → true",
+        "property.poolCount: 0 → 1",
+        "PRIMARY.CoverageA: 350000 → 375000",
+        "COV-B.CoverageB: 35000 → 37500 (10% of CovA)",
+        "COV-D.CoverageD: 70000 → 75000 (20% of CovA)"
+      ],
+      "from": "2026-04-15",
+      "to": "2026-09-01",
+      "effectiveDate": "2026-01-01",
+      "property": {
+        "occupancy": "OWNER",
+        "zone": "Z1",
+        "subZone": "SZ1",
+        "policyForm": "HO3",
+        "state": "NJ",
+        "zip": "08525",
+        "protectionClass": 3,
+        "construction": "FRM",
+        "externalCladding": "STD",
+        "roof": "SHINGLE",
+        "hasPool": true,
+        "poolCount": 1,
+        "hasTrampoline": false,
+        "trampolineCount": 0,
+        "hasCanines": false,
+        "canineCount": 0,
+        "seasonal": false,
+        "seasonalMonths": 0,
+        "claimFreeYears": 5,
+        "noOfFamilies": 1,
+        "structureType": "SFD"
+      },
+      "coverages": [
+        {
+          "id": "PRIMARY",
+          "name": "Coverage A – Dwelling",
+          "params": {
+            "CoverageA": "375000",
+            "AmountBand": ">250k",
+            "DeductiblePct": "0.01",
+            "DeductibleFlat": "1000"
+          }
+        },
+        {
+          "id": "COV-B",
+          "name": "Coverage B – Other Structures",
+          "params": {
+            "CoverageB": "37500",
+            "DeductiblePct": "0.01",
+            "DeductibleFlat": "1000"
+          }
+        },
+        {
+          "id": "COV-C",
+          "name": "Coverage C – Personal Property",
+          "params": {
+            "CoverageC": "175000",
+            "LossSettlement": "ACV",
+            "DeductiblePct": "0.01",
+            "DeductibleFlat": "1000"
+          }
+        },
+        {
+          "id": "COV-D",
+          "name": "Coverage D – Loss of Use",
+          "params": {
+            "CoverageD": "75000"
+          }
+        },
+        {
+          "id": "COV-E",
+          "name": "Coverage E – Personal Liability",
+          "params": {
+            "LiabilityLimit": "300000",
+            "MedPayLimit": "5000"
+          }
+        }
+      ]
+    },
+    {
+      "_label": "Segment 3 – Endorsement 2: canines acquired, CovA/B/C/D limits bumped (122 days)",
+      "_changes": [
+        "property.hasCanines: false → true",
+        "property.canineCount: 0 → 2",
+        "PRIMARY.CoverageA: 375000 → 400000",
+        "COV-B.CoverageB: 37500 → 40000 (10% of CovA)",
+        "COV-C.CoverageC: 175000 → 200000 (insured requested higher contents limit)",
+        "COV-D.CoverageD: 75000 → 80000 (20% of CovA)"
+      ],
+      "from": "2026-09-01",
+      "to": "2027-01-01",
+      "effectiveDate": "2026-01-01",
+      "property": {
+        "occupancy": "OWNER",
+        "zone": "Z1",
+        "subZone": "SZ1",
+        "policyForm": "HO3",
+        "state": "NJ",
+        "zip": "08525",
+        "protectionClass": 3,
+        "construction": "FRM",
+        "externalCladding": "STD",
+        "roof": "SHINGLE",
+        "hasPool": true,
+        "poolCount": 1,
+        "hasTrampoline": false,
+        "trampolineCount": 0,
+        "hasCanines": true,
+        "canineCount": 2,
+        "seasonal": false,
+        "seasonalMonths": 0,
+        "claimFreeYears": 5,
+        "noOfFamilies": 1,
+        "structureType": "SFD"
+      },
+      "coverages": [
+        {
+          "id": "PRIMARY",
+          "name": "Coverage A – Dwelling",
+          "params": {
+            "CoverageA": "400000",
+            "AmountBand": ">250k",
+            "DeductiblePct": "0.01",
+            "DeductibleFlat": "1000"
+          }
+        },
+        {
+          "id": "COV-B",
+          "name": "Coverage B – Other Structures",
+          "params": {
+            "CoverageB": "40000",
+            "DeductiblePct": "0.01",
+            "DeductibleFlat": "1000"
+          }
+        },
+        {
+          "id": "COV-C",
+          "name": "Coverage C – Personal Property",
+          "params": {
+            "CoverageC": "200000",
+            "LossSettlement": "ACV",
+            "DeductiblePct": "0.01",
+            "DeductibleFlat": "1000"
+          }
+        },
+        {
+          "id": "COV-D",
+          "name": "Coverage D – Loss of Use",
+          "params": {
+            "CoverageD": "80000"
+          }
+        },
+        {
+          "id": "COV-E",
+          "name": "Coverage E – Personal Liability",
+          "params": {
+            "LiabilityLimit": "300000",
+            "MedPayLimit": "5000"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,497 @@
+{
+  "_scenario": [
+    "Same HO-3 policy as sample-rate-policy-segments.json but modelled at coverage level.",
+    "Each coverage owns its own segment timeline — breakpoints differ per coverage.",
+    "",
+    "PRIMARY  (CovA): 3 segments — Apr 15 limit bump, Sep 01 limit bump.",
+    "COV-B    (Other Structures): 3 segments — tied to CovA on same dates.",
+    "COV-C    (Personal Property): 2 segments — no Apr 15 change; only Sep 01 limit bump.",
+    "COV-D    (Loss of Use): 3 segments — tied to CovA on same dates.",
+    "COV-E    (Personal Liability): 2 segments — Apr 15 pool adds liability exposure; no Sep 01 change.",
+    "",
+    "Key difference from policy-level: CovC and CovE have fewer segments because their",
+    "effective breakpoints do not coincide with all property-level endorsement dates.",
+    "NOTE: Only the PRIMARY coverage config exists today; COV-B/C/D/E are illustrative."
+  ],
+  "productCode": "HO-PRIMARY",
+  "policyFrom": "2026-01-01",
+  "policyTo": "2027-01-01",
+  "coverages": [
+    {
+      "id": "PRIMARY",
+      "name": "Coverage A – Dwelling",
+      "_timeline": "3 segments: inception → Apr 15 limit up → Sep 01 limit up",
+      "segments": [
+        {
+          "_label": "Inception (104 days, 350k dwelling)",
+          "from": "2026-01-01",
+          "to": "2026-04-15",
+          "effectiveDate": "2026-01-01",
+          "property": {
+            "occupancy": "OWNER",
+            "zone": "Z1",
+            "subZone": "SZ1",
+            "policyForm": "HO3",
+            "state": "NJ",
+            "zip": "08525",
+            "protectionClass": 3,
+            "construction": "FRM",
+            "externalCladding": "STD",
+            "roof": "SHINGLE",
+            "hasPool": false,
+            "poolCount": 0,
+            "hasTrampoline": false,
+            "trampolineCount": 0,
+            "hasCanines": false,
+            "canineCount": 0,
+            "seasonal": false,
+            "seasonalMonths": 0,
+            "claimFreeYears": 5,
+            "noOfFamilies": 1,
+            "structureType": "SFD"
+          },
+          "params": {
+            "CoverageA": "350000",
+            "AmountBand": ">250k",
+            "DeductiblePct": "0.01",
+            "DeductibleFlat": "1000"
+          }
+        },
+        {
+          "_label": "After Endorsement 1 (139 days, pool added, 375k dwelling)",
+          "from": "2026-04-15",
+          "to": "2026-09-01",
+          "effectiveDate": "2026-01-01",
+          "property": {
+            "occupancy": "OWNER",
+            "zone": "Z1",
+            "subZone": "SZ1",
+            "policyForm": "HO3",
+            "state": "NJ",
+            "zip": "08525",
+            "protectionClass": 3,
+            "construction": "FRM",
+            "externalCladding": "STD",
+            "roof": "SHINGLE",
+            "hasPool": true,
+            "poolCount": 1,
+            "hasTrampoline": false,
+            "trampolineCount": 0,
+            "hasCanines": false,
+            "canineCount": 0,
+            "seasonal": false,
+            "seasonalMonths": 0,
+            "claimFreeYears": 5,
+            "noOfFamilies": 1,
+            "structureType": "SFD"
+          },
+          "params": {
+            "CoverageA": "375000",
+            "AmountBand": ">250k",
+            "DeductiblePct": "0.01",
+            "DeductibleFlat": "1000"
+          }
+        },
+        {
+          "_label": "After Endorsement 2 (122 days, canines added, 400k dwelling)",
+          "from": "2026-09-01",
+          "to": "2027-01-01",
+          "effectiveDate": "2026-01-01",
+          "property": {
+            "occupancy": "OWNER",
+            "zone": "Z1",
+            "subZone": "SZ1",
+            "policyForm": "HO3",
+            "state": "NJ",
+            "zip": "08525",
+            "protectionClass": 3,
+            "construction": "FRM",
+            "externalCladding": "STD",
+            "roof": "SHINGLE",
+            "hasPool": true,
+            "poolCount": 1,
+            "hasTrampoline": false,
+            "trampolineCount": 0,
+            "hasCanines": true,
+            "canineCount": 2,
+            "seasonal": false,
+            "seasonalMonths": 0,
+            "claimFreeYears": 5,
+            "noOfFamilies": 1,
+            "structureType": "SFD"
+          },
+          "params": {
+            "CoverageA": "400000",
+            "AmountBand": ">250k",
+            "DeductiblePct": "0.01",
+            "DeductibleFlat": "1000"
+          }
+        }
+      ]
+    },
+    {
+      "id": "COV-B",
+      "name": "Coverage B – Other Structures",
+      "_timeline": "3 segments: limit tracks 10% of CovA on the same endorsement dates",
+      "segments": [
+        {
+          "_label": "Inception (104 days, 35k)",
+          "from": "2026-01-01",
+          "to": "2026-04-15",
+          "effectiveDate": "2026-01-01",
+          "property": {
+            "occupancy": "OWNER",
+            "zone": "Z1",
+            "subZone": "SZ1",
+            "policyForm": "HO3",
+            "state": "NJ",
+            "zip": "08525",
+            "protectionClass": 3,
+            "construction": "FRM",
+            "externalCladding": "STD",
+            "roof": "SHINGLE",
+            "hasPool": false,
+            "poolCount": 0,
+            "hasTrampoline": false,
+            "trampolineCount": 0,
+            "hasCanines": false,
+            "canineCount": 0,
+            "seasonal": false,
+            "seasonalMonths": 0,
+            "claimFreeYears": 5,
+            "noOfFamilies": 1,
+            "structureType": "SFD"
+          },
+          "params": {
+            "CoverageB": "35000",
+            "DeductiblePct": "0.01",
+            "DeductibleFlat": "1000"
+          }
+        },
+        {
+          "_label": "After Endorsement 1 (139 days, pool added, 37.5k)",
+          "from": "2026-04-15",
+          "to": "2026-09-01",
+          "effectiveDate": "2026-01-01",
+          "property": {
+            "occupancy": "OWNER",
+            "zone": "Z1",
+            "subZone": "SZ1",
+            "policyForm": "HO3",
+            "state": "NJ",
+            "zip": "08525",
+            "protectionClass": 3,
+            "construction": "FRM",
+            "externalCladding": "STD",
+            "roof": "SHINGLE",
+            "hasPool": true,
+            "poolCount": 1,
+            "hasTrampoline": false,
+            "trampolineCount": 0,
+            "hasCanines": false,
+            "canineCount": 0,
+            "seasonal": false,
+            "seasonalMonths": 0,
+            "claimFreeYears": 5,
+            "noOfFamilies": 1,
+            "structureType": "SFD"
+          },
+          "params": {
+            "CoverageB": "37500",
+            "DeductiblePct": "0.01",
+            "DeductibleFlat": "1000"
+          }
+        },
+        {
+          "_label": "After Endorsement 2 (122 days, canines added, 40k)",
+          "from": "2026-09-01",
+          "to": "2027-01-01",
+          "effectiveDate": "2026-01-01",
+          "property": {
+            "occupancy": "OWNER",
+            "zone": "Z1",
+            "subZone": "SZ1",
+            "policyForm": "HO3",
+            "state": "NJ",
+            "zip": "08525",
+            "protectionClass": 3,
+            "construction": "FRM",
+            "externalCladding": "STD",
+            "roof": "SHINGLE",
+            "hasPool": true,
+            "poolCount": 1,
+            "hasTrampoline": false,
+            "trampolineCount": 0,
+            "hasCanines": true,
+            "canineCount": 2,
+            "seasonal": false,
+            "seasonalMonths": 0,
+            "claimFreeYears": 5,
+            "noOfFamilies": 1,
+            "structureType": "SFD"
+          },
+          "params": {
+            "CoverageB": "40000",
+            "DeductiblePct": "0.01",
+            "DeductibleFlat": "1000"
+          }
+        }
+      ]
+    },
+    {
+      "id": "COV-C",
+      "name": "Coverage C – Personal Property",
+      "_timeline": "2 segments only — CovC was NOT touched at the Apr 15 endorsement; limit bumped Sep 01 only.",
+      "segments": [
+        {
+          "_label": "Inception through Sep 01 (243 days, 175k contents)",
+          "from": "2026-01-01",
+          "to": "2026-09-01",
+          "effectiveDate": "2026-01-01",
+          "property": {
+            "occupancy": "OWNER",
+            "zone": "Z1",
+            "subZone": "SZ1",
+            "policyForm": "HO3",
+            "state": "NJ",
+            "zip": "08525",
+            "protectionClass": 3,
+            "construction": "FRM",
+            "externalCladding": "STD",
+            "roof": "SHINGLE",
+            "hasPool": false,
+            "poolCount": 0,
+            "hasTrampoline": false,
+            "trampolineCount": 0,
+            "hasCanines": false,
+            "canineCount": 0,
+            "seasonal": false,
+            "seasonalMonths": 0,
+            "claimFreeYears": 5,
+            "noOfFamilies": 1,
+            "structureType": "SFD"
+          },
+          "params": {
+            "CoverageC": "175000",
+            "LossSettlement": "ACV",
+            "DeductiblePct": "0.01",
+            "DeductibleFlat": "1000"
+          }
+        },
+        {
+          "_label": "After Endorsement 2 (122 days, 200k contents, canines added to property)",
+          "_note": "Property reflects full state at Sep 01 even though the CovC change is just a limit bump.",
+          "from": "2026-09-01",
+          "to": "2027-01-01",
+          "effectiveDate": "2026-01-01",
+          "property": {
+            "occupancy": "OWNER",
+            "zone": "Z1",
+            "subZone": "SZ1",
+            "policyForm": "HO3",
+            "state": "NJ",
+            "zip": "08525",
+            "protectionClass": 3,
+            "construction": "FRM",
+            "externalCladding": "STD",
+            "roof": "SHINGLE",
+            "hasPool": true,
+            "poolCount": 1,
+            "hasTrampoline": false,
+            "trampolineCount": 0,
+            "hasCanines": true,
+            "canineCount": 2,
+            "seasonal": false,
+            "seasonalMonths": 0,
+            "claimFreeYears": 5,
+            "noOfFamilies": 1,
+            "structureType": "SFD"
+          },
+          "params": {
+            "CoverageC": "200000",
+            "LossSettlement": "ACV",
+            "DeductiblePct": "0.01",
+            "DeductibleFlat": "1000"
+          }
+        }
+      ]
+    },
+    {
+      "id": "COV-D",
+      "name": "Coverage D – Loss of Use",
+      "_timeline": "3 segments: limit tracks 20% of CovA on the same endorsement dates",
+      "segments": [
+        {
+          "_label": "Inception (104 days, 70k)",
+          "from": "2026-01-01",
+          "to": "2026-04-15",
+          "effectiveDate": "2026-01-01",
+          "property": {
+            "occupancy": "OWNER",
+            "zone": "Z1",
+            "subZone": "SZ1",
+            "policyForm": "HO3",
+            "state": "NJ",
+            "zip": "08525",
+            "protectionClass": 3,
+            "construction": "FRM",
+            "externalCladding": "STD",
+            "roof": "SHINGLE",
+            "hasPool": false,
+            "poolCount": 0,
+            "hasTrampoline": false,
+            "trampolineCount": 0,
+            "hasCanines": false,
+            "canineCount": 0,
+            "seasonal": false,
+            "seasonalMonths": 0,
+            "claimFreeYears": 5,
+            "noOfFamilies": 1,
+            "structureType": "SFD"
+          },
+          "params": {
+            "CoverageD": "70000"
+          }
+        },
+        {
+          "_label": "After Endorsement 1 (139 days, pool added, 75k)",
+          "from": "2026-04-15",
+          "to": "2026-09-01",
+          "effectiveDate": "2026-01-01",
+          "property": {
+            "occupancy": "OWNER",
+            "zone": "Z1",
+            "subZone": "SZ1",
+            "policyForm": "HO3",
+            "state": "NJ",
+            "zip": "08525",
+            "protectionClass": 3,
+            "construction": "FRM",
+            "externalCladding": "STD",
+            "roof": "SHINGLE",
+            "hasPool": true,
+            "poolCount": 1,
+            "hasTrampoline": false,
+            "trampolineCount": 0,
+            "hasCanines": false,
+            "canineCount": 0,
+            "seasonal": false,
+            "seasonalMonths": 0,
+            "claimFreeYears": 5,
+            "noOfFamilies": 1,
+            "structureType": "SFD"
+          },
+          "params": {
+            "CoverageD": "75000"
+          }
+        },
+        {
+          "_label": "After Endorsement 2 (122 days, canines added, 80k)",
+          "from": "2026-09-01",
+          "to": "2027-01-01",
+          "effectiveDate": "2026-01-01",
+          "property": {
+            "occupancy": "OWNER",
+            "zone": "Z1",
+            "subZone": "SZ1",
+            "policyForm": "HO3",
+            "state": "NJ",
+            "zip": "08525",
+            "protectionClass": 3,
+            "construction": "FRM",
+            "externalCladding": "STD",
+            "roof": "SHINGLE",
+            "hasPool": true,
+            "poolCount": 1,
+            "hasTrampoline": false,
+            "trampolineCount": 0,
+            "hasCanines": true,
+            "canineCount": 2,
+            "seasonal": false,
+            "seasonalMonths": 0,
+            "claimFreeYears": 5,
+            "noOfFamilies": 1,
+            "structureType": "SFD"
+          },
+          "params": {
+            "CoverageD": "80000"
+          }
+        }
+      ]
+    },
+    {
+      "id": "COV-E",
+      "name": "Coverage E – Personal Liability",
+      "_timeline": "2 segments only — pool installation (Apr 15) creates a new liability exposure; canines (Sep 01) did not change this coverage's rating params.",
+      "segments": [
+        {
+          "_label": "Inception (104 days, no pool, 300k liability limit)",
+          "from": "2026-01-01",
+          "to": "2026-04-15",
+          "effectiveDate": "2026-01-01",
+          "property": {
+            "occupancy": "OWNER",
+            "zone": "Z1",
+            "subZone": "SZ1",
+            "policyForm": "HO3",
+            "state": "NJ",
+            "zip": "08525",
+            "protectionClass": 3,
+            "construction": "FRM",
+            "externalCladding": "STD",
+            "roof": "SHINGLE",
+            "hasPool": false,
+            "poolCount": 0,
+            "hasTrampoline": false,
+            "trampolineCount": 0,
+            "hasCanines": false,
+            "canineCount": 0,
+            "seasonal": false,
+            "seasonalMonths": 0,
+            "claimFreeYears": 5,
+            "noOfFamilies": 1,
+            "structureType": "SFD"
+          },
+          "params": {
+            "LiabilityLimit": "300000",
+            "MedPayLimit": "5000"
+          }
+        },
+        {
+          "_label": "Pool installed through policy end (261 days, hasPool=true affects liability rating)",
+          "_note": "The property snapshot reflects the LATEST state at each segment start. CovE params unchanged — only the property hazard changed, which the CovE pipeline reads via $risk.hasPool.",
+          "from": "2026-04-15",
+          "to": "2027-01-01",
+          "effectiveDate": "2026-01-01",
+          "property": {
+            "occupancy": "OWNER",
+            "zone": "Z1",
+            "subZone": "SZ1",
+            "policyForm": "HO3",
+            "state": "NJ",
+            "zip": "08525",
+            "protectionClass": 3,
+            "construction": "FRM",
+            "externalCladding": "STD",
+            "roof": "SHINGLE",
+            "hasPool": true,
+            "poolCount": 1,
+            "hasTrampoline": false,
+            "trampolineCount": 0,
+            "hasCanines": true,
+            "canineCount": 2,
+            "seasonal": false,
+            "seasonalMonths": 0,
+            "claimFreeYears": 5,
+            "noOfFamilies": 1,
+            "structureType": "SFD"
+          },
+          "params": {
+            "LiabilityLimit": "300000",
+            "MedPayLimit": "5000"
+          }
+        }
+      ]
+    }
+  ]
+}

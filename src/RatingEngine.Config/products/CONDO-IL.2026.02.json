@@ -1,0 +1,10 @@
+{
+  "productCode": "CONDO-IL",
+  "version": "2026.02",
+  "effectiveStart": "2026-02-01",
+  "coverages": [
+    { "coverageCode": "BUILDINGCVG",    "version": "2026.02" },
+    { "coverageCode": "CONTENTSCVG",    "version": "2026.02" },
+    { "coverageCode": "COMGENLIABLIM",  "version": "2026.02" }
+  ]
+}

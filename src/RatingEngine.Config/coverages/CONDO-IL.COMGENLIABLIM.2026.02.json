@@ -1,0 +1,159 @@
+{
+  "productCode": "CONDO-IL",
+  "coverageCode": "COMGENLIABLIM",
+  "version": "2026.02",
+  "effectiveStart": "2026-02-01",
+  "perils": ["GL"],
+  "pipeline": [
+
+    { "id": "S1_CONDO_BASERATE", "name": "Condo GL Base Rate",
+      "operation": "lookup", "rateTable": "GLBaseRate",
+      "keys": { "CLTerritory": "$risk.CLTerritory", "AssocType": "CONDOMINIUM" },
+      "math": { "type": "set" } },
+
+    { "id": "S2_CONDO_LCM", "name": "Condo LCM",
+      "operation": "lookup", "rateTable": "GLLCM",
+      "keys": { "Wildcard": "*" },
+      "math": { "type": "mul" } },
+
+    { "id": "S3_CONDO_LIMITFACTOR", "name": "Condo GL Limit Factor",
+      "operation": "lookup", "rateTable": "GLLimitFactor",
+      "keys": { "AssocType": "CONDOMINIUM" },
+      "math": { "type": "mul" } },
+
+    { "id": "S4_CONDO_PREM", "name": "Condo Premium (× Total Condo Units)",
+      "operation": "compute",
+      "compute": { "expr": "$premium * $coverage.CondoUnits", "storeAs": "CondoPrem", "applyToPremium": true } },
+
+    { "id": "S5_HOA_BASERATE", "name": "HOA GL Base Rate",
+      "operation": "lookup", "rateTable": "GLBaseRate",
+      "keys": { "CLTerritory": "$risk.CLTerritory", "AssocType": "HOMOWNRASSC" },
+      "math": { "type": "set" } },
+
+    { "id": "S6_HOA_LCM", "name": "HOA LCM",
+      "operation": "lookup", "rateTable": "GLLCM",
+      "keys": { "Wildcard": "*" },
+      "math": { "type": "mul" } },
+
+    { "id": "S7_HOA_LIMITFACTOR", "name": "HOA GL Limit Factor",
+      "operation": "lookup", "rateTable": "GLLimitFactor",
+      "keys": { "AssocType": "HOMOWNRASSC" },
+      "math": { "type": "mul" } },
+
+    { "id": "S8_HOA_PREM", "name": "HOA Premium (× Total HOA Units)",
+      "operation": "compute",
+      "compute": { "expr": "$premium * $coverage.HOAUnits", "storeAs": "HOAPrem", "applyToPremium": true } },
+
+    { "id": "S9_GL_BASEPREM", "name": "GL Base Premium (Condo + HOA)",
+      "operation": "compute",
+      "compute": { "expr": "$risk.CondoPrem + $risk.HOAPrem", "storeAs": "GLBasePrem", "applyToPremium": true } },
+
+    { "id": "S10_POOL_BASERATE", "name": "Pool Base Rate",
+      "operation": "lookup", "rateTable": "GLPoolBaseRate",
+      "keys": { "CLTerritory": "$risk.CLTerritory" },
+      "math": { "type": "set" },
+      "when": { "path": "$coverage.HasPool", "isTrue": "true" } },
+
+    { "id": "S11_POOL_LIMITFACTOR", "name": "Pool GL Limit Factor",
+      "operation": "lookup", "rateTable": "GLPoolLimitFactor",
+      "keys": { "Wildcard": "*" },
+      "math": { "type": "mul" },
+      "when": { "path": "$coverage.HasPool", "isTrue": "true" } },
+
+    { "id": "S12_POOL_PREM", "name": "Pool Premium (× No. of Pools)",
+      "operation": "compute",
+      "compute": { "expr": "$premium * $coverage.NoOfPools", "storeAs": "PoolPrem", "applyToPremium": true },
+      "when": { "path": "$coverage.HasPool", "isTrue": "true" } },
+
+    { "id": "S13_EXE_BASERATE", "name": "Exercise Room Base Rate",
+      "operation": "lookup", "rateTable": "GLExerciseBaseRate",
+      "keys": { "CLTerritory": "$risk.CLTerritory" },
+      "math": { "type": "set" },
+      "when": { "path": "$coverage.HasExerciseRoom", "isTrue": "true" } },
+
+    { "id": "S14_EXE_LIMITFACTOR", "name": "Exercise Room GL Limit Factor",
+      "operation": "lookup", "rateTable": "GLExerciseLimitFactor",
+      "keys": { "Wildcard": "*" },
+      "math": { "type": "mul" },
+      "when": { "path": "$coverage.HasExerciseRoom", "isTrue": "true" } },
+
+    { "id": "S15_EXE_PREM", "name": "Exercise Room Premium",
+      "operation": "compute",
+      "compute": { "expr": "$premium", "storeAs": "ExePrem", "applyToPremium": true },
+      "when": { "path": "$coverage.HasExerciseRoom", "isTrue": "true" } },
+
+    { "id": "S16_CLUB_BASERATE", "name": "Clubhouse Base Rate",
+      "operation": "lookup", "rateTable": "GLClubBaseRate",
+      "keys": { "CLTerritory": "$risk.CLTerritory" },
+      "math": { "type": "set" },
+      "when": { "path": "$coverage.HasClubhouse", "isTrue": "true" } },
+
+    { "id": "S17_CLUB_LIMITFACTOR", "name": "Clubhouse GL Limit Factor",
+      "operation": "lookup", "rateTable": "GLClubLimitFactor",
+      "keys": { "Wildcard": "*" },
+      "math": { "type": "mul" },
+      "when": { "path": "$coverage.HasClubhouse", "isTrue": "true" } },
+
+    { "id": "S18_CLUB_PREM", "name": "Clubhouse Premium",
+      "operation": "compute",
+      "compute": { "expr": "$premium", "storeAs": "ClubPrem", "applyToPremium": true },
+      "when": { "path": "$coverage.HasClubhouse", "isTrue": "true" } },
+
+    { "id": "S19_REC_BASERATE", "name": "Recreation Facility Base Rate",
+      "operation": "lookup", "rateTable": "GLRecreationBaseRate",
+      "keys": { "CLTerritory": "$risk.CLTerritory" },
+      "math": { "type": "set" },
+      "when": { "path": "$coverage.HasRecFacility", "isTrue": "true" } },
+
+    { "id": "S20_REC_LIMITFACTOR", "name": "Recreation Facility GL Limit Factor",
+      "operation": "lookup", "rateTable": "GLRecreationLimitFactor",
+      "keys": { "Wildcard": "*" },
+      "math": { "type": "mul" },
+      "when": { "path": "$coverage.HasRecFacility", "isTrue": "true" } },
+
+    { "id": "S21_REC_PREM", "name": "Recreation Facility Premium (× No. of Facilities)",
+      "operation": "compute",
+      "compute": { "expr": "$premium * $coverage.NoOfRecFacilities", "storeAs": "RecPrem", "applyToPremium": true },
+      "when": { "path": "$coverage.HasRecFacility", "isTrue": "true" } },
+
+    { "id": "S22_COMBINE", "name": "Total GL Base Premium (all facilities)",
+      "operation": "compute",
+      "compute": { "expr": "$risk.GLBasePrem + $risk.PoolPrem + $risk.ExePrem + $risk.ClubPrem + $risk.RecPrem", "storeAs": "TotalGLPrem", "applyToPremium": true } },
+
+    { "id": "ROUND_RATE", "operation": "round",
+      "round": { "precision": 4, "mode": "AwayFromZero" } },
+
+    { "id": "S23A_IRPM_AMT", "name": "IRPM Amount",
+      "operation": "compute",
+      "compute": { "expr": "$premium * $coverage.IRPMPct / 100", "storeAs": "IRPMAmt", "applyToPremium": false },
+      "when": { "path": "$coverage.IRPMPct", "notEquals": "0" } },
+
+    { "id": "S23B_IRPM_APPLY", "name": "Apply IRPM",
+      "operation": "compute",
+      "compute": { "expr": "$premium + $risk.IRPMAmt", "storeAs": "TotalWithIRPM", "applyToPremium": true },
+      "when": { "path": "$coverage.IRPMPct", "notEquals": "0" } },
+
+    { "id": "S24A_EXPIRPM_AMT", "name": "Excess IRPM Amount",
+      "operation": "compute",
+      "compute": { "expr": "$premium * $coverage.ExpIRPMPct / 100", "storeAs": "ExpIRPMAmt", "applyToPremium": false },
+      "when": { "path": "$coverage.ExpIRPMPct", "notEquals": "0" } },
+
+    { "id": "S24B_EXPIRPM_APPLY", "name": "Apply Excess IRPM",
+      "operation": "compute",
+      "compute": { "expr": "$premium + $risk.ExpIRPMAmt", "storeAs": "TotalWithExpIRPM", "applyToPremium": true },
+      "when": { "path": "$coverage.ExpIRPMPct", "notEquals": "0" } },
+
+    { "id": "S25A_AGENTCONTB_AMT", "name": "Agent Contribution Amount",
+      "operation": "compute",
+      "compute": { "expr": "$premium * $coverage.AgentContPct / 100", "storeAs": "AgentContAmt", "applyToPremium": false },
+      "when": { "path": "$coverage.AgentContPct", "notEquals": "0" } },
+
+    { "id": "S25B_AGENTCONTB_APPLY", "name": "Apply Agent Contribution (credit)",
+      "operation": "compute",
+      "compute": { "expr": "$premium - $risk.AgentContAmt", "storeAs": "FinalGLPrem", "applyToPremium": true },
+      "when": { "path": "$coverage.AgentContPct", "notEquals": "0" } },
+
+    { "id": "ROUND_FINAL", "operation": "round",
+      "round": { "precision": 2, "mode": "AwayFromZero" } }
+  ]
+}

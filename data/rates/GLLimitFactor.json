@@ -1,0 +1,4 @@
+[
+  { "Key1": "CONDOMINIUM", "Factor": 1.72, "EffStart": "2026-02-01" },
+  { "Key1": "HOMOWNRASSC", "Factor": 1.9,  "EffStart": "2026-02-01" }
+]

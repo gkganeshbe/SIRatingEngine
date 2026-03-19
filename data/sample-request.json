@@ -1,0 +1,32 @@
+{
+  "ProductCode": "HO-PRIMARY",
+  "CoverageCode": "PRIMARY",
+  "EffectiveDate": "2026-02-15",
+  "Risk": {
+    "Occupancy": "OWNER",
+    "Zone": "Z1",
+    "SubZone": "SZ1",
+    "PolicyForm": "HO3",
+    "State": "NJ",
+    "Zip": "08525",
+    "ProtectionClass": 3,
+    "Construction": "FRM",
+    "ExternalCladding": "STD",
+    "Roof": "SHINGLE",
+    "CoverageA": 300000,
+    "AmountBand": ">250k",
+    "HasPool": false,
+    "PoolCount": 0,
+    "HasTrampoline": false,
+    "TrampolineCount": 0,
+    "HasCanines": false,
+    "CanineCount": 0,
+    "Seasonal": false,
+    "SeasonalMonths": 0,
+    "ClaimFreeYears": 5,
+    "NoOfFamilies": 1,
+    "StructureType": "SFD",
+    "DeductiblePct": 1.0,
+    "DeductibleFlat": 1000
+  }
+}

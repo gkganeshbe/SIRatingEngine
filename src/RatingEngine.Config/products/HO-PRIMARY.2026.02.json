@@ -1,0 +1,8 @@
+{
+  "productCode": "HO-PRIMARY",
+  "version": "2026.02",
+  "effectiveStart": "2026-02-01",
+  "coverages": [
+    { "coverageCode": "PRIMARY", "version": "2026.02" }
+  ]
+}

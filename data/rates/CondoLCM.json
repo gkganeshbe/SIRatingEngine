@@ -1,0 +1,22 @@
+[
+  {
+    "Key1": "SUPERIOR",
+    "Factor": 1.326,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "PREFERRED",
+    "Factor": 1.705,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "STANDARD",
+    "Factor": 1.894,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "SUBSTANDARD",
+    "Factor": 2.238,
+    "EffStart": "2026-02-01"
+  }
+]

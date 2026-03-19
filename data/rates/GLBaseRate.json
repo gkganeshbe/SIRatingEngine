@@ -1,0 +1,16 @@
+[
+  { "Key1": "501", "Key2": "CONDOMINIUM", "Factor": 17.9,  "EffStart": "2026-02-01" },
+  { "Key1": "504", "Key2": "CONDOMINIUM", "Factor": 22.4,  "EffStart": "2026-02-01" },
+  { "Key1": "506", "Key2": "CONDOMINIUM", "Factor": 24.4,  "EffStart": "2026-02-01" },
+  { "Key1": "507", "Key2": "CONDOMINIUM", "Factor": 24.9,  "EffStart": "2026-02-01" },
+  { "Key1": "508", "Key2": "CONDOMINIUM", "Factor": 17.7,  "EffStart": "2026-02-01" },
+  { "Key1": "509", "Key2": "CONDOMINIUM", "Factor": 19.4,  "EffStart": "2026-02-01" },
+  { "Key1": "514", "Key2": "CONDOMINIUM", "Factor": 16.1,  "EffStart": "2026-02-01" },
+  { "Key1": "501", "Key2": "HOMOWNRASSC", "Factor": 5.66,  "EffStart": "2026-02-01" },
+  { "Key1": "504", "Key2": "HOMOWNRASSC", "Factor": 4.16,  "EffStart": "2026-02-01" },
+  { "Key1": "506", "Key2": "HOMOWNRASSC", "Factor": 5.16,  "EffStart": "2026-02-01" },
+  { "Key1": "507", "Key2": "HOMOWNRASSC", "Factor": 6.59,  "EffStart": "2026-02-01" },
+  { "Key1": "508", "Key2": "HOMOWNRASSC", "Factor": 3.56,  "EffStart": "2026-02-01" },
+  { "Key1": "509", "Key2": "HOMOWNRASSC", "Factor": 5.43,  "EffStart": "2026-02-01" },
+  { "Key1": "514", "Key2": "HOMOWNRASSC", "Factor": 2.1,   "EffStart": "2026-02-01" }
+]

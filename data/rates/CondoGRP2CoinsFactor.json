@@ -1,0 +1,27 @@
+[
+    {
+        "Key1":  "COINS100",
+        "Factor":  0.9,
+        "EffStart":  "2026-02-01"
+    },
+    {
+        "Key1":  "COINS90",
+        "Factor":  0.95,
+        "EffStart":  "2026-02-01"
+    },
+    {
+        "Key1":  "COINS80",
+        "Factor":  1,
+        "EffStart":  "2026-02-01"
+    },
+    {
+        "Key1":  "COINSAGREED",
+        "Factor":  1.05,
+        "EffStart":  "2026-02-01"
+    },
+    {
+        "Key1":  "COINSGRC",
+        "Factor":  1,
+        "EffStart":  "2026-02-01"
+    }
+]

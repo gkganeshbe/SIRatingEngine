@@ -1,0 +1,1652 @@
+[
+  {
+    "Key1": "FRAME",
+    "Key2": "50000",
+    "Factor": 1.172,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FRAME",
+    "Key2": "75000",
+    "Factor": 1.172,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FRAME",
+    "Key2": "100000",
+    "Factor": 1.172,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FRAME",
+    "Key2": "125000",
+    "Factor": 1.128,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FRAME",
+    "Key2": "150000",
+    "Factor": 1.093,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FRAME",
+    "Key2": "175000",
+    "Factor": 1.064,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FRAME",
+    "Key2": "200000",
+    "Factor": 1.039,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FRAME",
+    "Key2": "225000",
+    "Factor": 1.018,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FRAME",
+    "Key2": "250000",
+    "Factor": 1,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FRAME",
+    "Key2": "275000",
+    "Factor": 0.984,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FRAME",
+    "Key2": "300000",
+    "Factor": 0.969,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FRAME",
+    "Key2": "325000",
+    "Factor": 0.956,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FRAME",
+    "Key2": "350000",
+    "Factor": 0.943,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FRAME",
+    "Key2": "375000",
+    "Factor": 0.932,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FRAME",
+    "Key2": "400000",
+    "Factor": 0.922,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FRAME",
+    "Key2": "425000",
+    "Factor": 0.912,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FRAME",
+    "Key2": "450000",
+    "Factor": 0.903,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FRAME",
+    "Key2": "475000",
+    "Factor": 0.895,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FRAME",
+    "Key2": "500000",
+    "Factor": 0.887,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FRAME",
+    "Key2": "550000",
+    "Factor": 0.872,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FRAME",
+    "Key2": "600000",
+    "Factor": 0.859,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FRAME",
+    "Key2": "650000",
+    "Factor": 0.847,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FRAME",
+    "Key2": "700000",
+    "Factor": 0.837,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FRAME",
+    "Key2": "750000",
+    "Factor": 0.827,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FRAME",
+    "Key2": "800000",
+    "Factor": 0.817,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FRAME",
+    "Key2": "850000",
+    "Factor": 0.809,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FRAME",
+    "Key2": "900000",
+    "Factor": 0.801,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FRAME",
+    "Key2": "950000",
+    "Factor": 0.793,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FRAME",
+    "Key2": "1000000",
+    "Factor": 0.786,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FRAME",
+    "Key2": "1250000",
+    "Factor": 0.757,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FRAME",
+    "Key2": "1500000",
+    "Factor": 0.733,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FRAME",
+    "Key2": "1750000",
+    "Factor": 0.714,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FRAME",
+    "Key2": "2000000",
+    "Factor": 0.697,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FRAME",
+    "Key2": "2250000",
+    "Factor": 0.683,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FRAME",
+    "Key2": "2500000",
+    "Factor": 0.671,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FRAME",
+    "Key2": "2750000",
+    "Factor": 0.66,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FRAME",
+    "Key2": "3000000",
+    "Factor": 0.65,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FRAME",
+    "Key2": "3250000",
+    "Factor": 0.641,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FRAME",
+    "Key2": "3500000",
+    "Factor": 0.633,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FRAME",
+    "Key2": "3750000",
+    "Factor": 0.625,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FRAME",
+    "Key2": "4000000",
+    "Factor": 0.618,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FRAME",
+    "Key2": "4250000",
+    "Factor": 0.612,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FRAME",
+    "Key2": "4500000",
+    "Factor": 0.606,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FRAME",
+    "Key2": "4750000",
+    "Factor": 0.6,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FRAME",
+    "Key2": "5000000",
+    "Factor": 0.595,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FRAME",
+    "Key2": "5500000",
+    "Factor": 0.585,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FRAME",
+    "Key2": "6000000",
+    "Factor": 0.576,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FRAME",
+    "Key2": "6500000",
+    "Factor": 0.569,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FRAME",
+    "Key2": "7000000",
+    "Factor": 0.561,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FRAME",
+    "Key2": "7500000",
+    "Factor": 0.555,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FRAME",
+    "Key2": "8000000",
+    "Factor": 0.548,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FRAME",
+    "Key2": "8500000",
+    "Factor": 0.543,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FRAME",
+    "Key2": "9000000",
+    "Factor": 0.537,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FRAME",
+    "Key2": "9500000",
+    "Factor": 0.532,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FRAME",
+    "Key2": "10000000",
+    "Factor": 0.528,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "JOISTEDMASONRY",
+    "Key2": "50000",
+    "Factor": 1.172,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "JOISTEDMASONRY",
+    "Key2": "75000",
+    "Factor": 1.172,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "JOISTEDMASONRY",
+    "Key2": "100000",
+    "Factor": 1.172,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "JOISTEDMASONRY",
+    "Key2": "125000",
+    "Factor": 1.128,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "JOISTEDMASONRY",
+    "Key2": "150000",
+    "Factor": 1.093,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "JOISTEDMASONRY",
+    "Key2": "175000",
+    "Factor": 1.064,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "JOISTEDMASONRY",
+    "Key2": "200000",
+    "Factor": 1.039,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "JOISTEDMASONRY",
+    "Key2": "225000",
+    "Factor": 1.018,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "JOISTEDMASONRY",
+    "Key2": "250000",
+    "Factor": 1,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "JOISTEDMASONRY",
+    "Key2": "275000",
+    "Factor": 0.984,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "JOISTEDMASONRY",
+    "Key2": "300000",
+    "Factor": 0.969,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "JOISTEDMASONRY",
+    "Key2": "325000",
+    "Factor": 0.956,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "JOISTEDMASONRY",
+    "Key2": "350000",
+    "Factor": 0.943,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "JOISTEDMASONRY",
+    "Key2": "375000",
+    "Factor": 0.932,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "JOISTEDMASONRY",
+    "Key2": "400000",
+    "Factor": 0.922,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "JOISTEDMASONRY",
+    "Key2": "425000",
+    "Factor": 0.912,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "JOISTEDMASONRY",
+    "Key2": "450000",
+    "Factor": 0.903,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "JOISTEDMASONRY",
+    "Key2": "475000",
+    "Factor": 0.895,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "JOISTEDMASONRY",
+    "Key2": "500000",
+    "Factor": 0.887,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "JOISTEDMASONRY",
+    "Key2": "550000",
+    "Factor": 0.872,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "JOISTEDMASONRY",
+    "Key2": "600000",
+    "Factor": 0.859,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "JOISTEDMASONRY",
+    "Key2": "650000",
+    "Factor": 0.847,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "JOISTEDMASONRY",
+    "Key2": "700000",
+    "Factor": 0.837,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "JOISTEDMASONRY",
+    "Key2": "750000",
+    "Factor": 0.827,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "JOISTEDMASONRY",
+    "Key2": "800000",
+    "Factor": 0.817,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "JOISTEDMASONRY",
+    "Key2": "850000",
+    "Factor": 0.809,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "JOISTEDMASONRY",
+    "Key2": "900000",
+    "Factor": 0.801,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "JOISTEDMASONRY",
+    "Key2": "950000",
+    "Factor": 0.793,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "JOISTEDMASONRY",
+    "Key2": "1000000",
+    "Factor": 0.786,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "JOISTEDMASONRY",
+    "Key2": "1250000",
+    "Factor": 0.757,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "JOISTEDMASONRY",
+    "Key2": "1500000",
+    "Factor": 0.733,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "JOISTEDMASONRY",
+    "Key2": "1750000",
+    "Factor": 0.714,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "JOISTEDMASONRY",
+    "Key2": "2000000",
+    "Factor": 0.697,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "JOISTEDMASONRY",
+    "Key2": "2250000",
+    "Factor": 0.683,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "JOISTEDMASONRY",
+    "Key2": "2500000",
+    "Factor": 0.671,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "JOISTEDMASONRY",
+    "Key2": "2750000",
+    "Factor": 0.66,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "JOISTEDMASONRY",
+    "Key2": "3000000",
+    "Factor": 0.65,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "JOISTEDMASONRY",
+    "Key2": "3250000",
+    "Factor": 0.641,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "JOISTEDMASONRY",
+    "Key2": "3500000",
+    "Factor": 0.633,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "JOISTEDMASONRY",
+    "Key2": "3750000",
+    "Factor": 0.625,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "JOISTEDMASONRY",
+    "Key2": "4000000",
+    "Factor": 0.618,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "JOISTEDMASONRY",
+    "Key2": "4250000",
+    "Factor": 0.612,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "JOISTEDMASONRY",
+    "Key2": "4500000",
+    "Factor": 0.606,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "JOISTEDMASONRY",
+    "Key2": "4750000",
+    "Factor": 0.6,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "JOISTEDMASONRY",
+    "Key2": "5000000",
+    "Factor": 0.595,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "JOISTEDMASONRY",
+    "Key2": "5500000",
+    "Factor": 0.585,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "JOISTEDMASONRY",
+    "Key2": "6000000",
+    "Factor": 0.576,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "JOISTEDMASONRY",
+    "Key2": "6500000",
+    "Factor": 0.569,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "JOISTEDMASONRY",
+    "Key2": "7000000",
+    "Factor": 0.561,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "JOISTEDMASONRY",
+    "Key2": "7500000",
+    "Factor": 0.555,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "JOISTEDMASONRY",
+    "Key2": "8000000",
+    "Factor": 0.548,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "JOISTEDMASONRY",
+    "Key2": "8500000",
+    "Factor": 0.543,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "JOISTEDMASONRY",
+    "Key2": "9000000",
+    "Factor": 0.537,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "JOISTEDMASONRY",
+    "Key2": "9500000",
+    "Factor": 0.532,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "JOISTEDMASONRY",
+    "Key2": "10000000",
+    "Factor": 0.528,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "NONCOMBUSTIBLE",
+    "Key2": "50000",
+    "Factor": 1.172,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "NONCOMBUSTIBLE",
+    "Key2": "75000",
+    "Factor": 1.172,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "NONCOMBUSTIBLE",
+    "Key2": "100000",
+    "Factor": 1.172,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "NONCOMBUSTIBLE",
+    "Key2": "125000",
+    "Factor": 1.128,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "NONCOMBUSTIBLE",
+    "Key2": "150000",
+    "Factor": 1.093,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "NONCOMBUSTIBLE",
+    "Key2": "175000",
+    "Factor": 1.064,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "NONCOMBUSTIBLE",
+    "Key2": "200000",
+    "Factor": 1.039,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "NONCOMBUSTIBLE",
+    "Key2": "225000",
+    "Factor": 1.018,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "NONCOMBUSTIBLE",
+    "Key2": "250000",
+    "Factor": 1,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "NONCOMBUSTIBLE",
+    "Key2": "275000",
+    "Factor": 0.984,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "NONCOMBUSTIBLE",
+    "Key2": "300000",
+    "Factor": 0.969,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "NONCOMBUSTIBLE",
+    "Key2": "325000",
+    "Factor": 0.956,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "NONCOMBUSTIBLE",
+    "Key2": "350000",
+    "Factor": 0.943,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "NONCOMBUSTIBLE",
+    "Key2": "375000",
+    "Factor": 0.932,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "NONCOMBUSTIBLE",
+    "Key2": "400000",
+    "Factor": 0.922,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "NONCOMBUSTIBLE",
+    "Key2": "425000",
+    "Factor": 0.912,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "NONCOMBUSTIBLE",
+    "Key2": "450000",
+    "Factor": 0.903,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "NONCOMBUSTIBLE",
+    "Key2": "475000",
+    "Factor": 0.895,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "NONCOMBUSTIBLE",
+    "Key2": "500000",
+    "Factor": 0.887,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "NONCOMBUSTIBLE",
+    "Key2": "550000",
+    "Factor": 0.872,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "NONCOMBUSTIBLE",
+    "Key2": "600000",
+    "Factor": 0.859,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "NONCOMBUSTIBLE",
+    "Key2": "650000",
+    "Factor": 0.847,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "NONCOMBUSTIBLE",
+    "Key2": "700000",
+    "Factor": 0.837,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "NONCOMBUSTIBLE",
+    "Key2": "750000",
+    "Factor": 0.827,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "NONCOMBUSTIBLE",
+    "Key2": "800000",
+    "Factor": 0.817,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "NONCOMBUSTIBLE",
+    "Key2": "850000",
+    "Factor": 0.809,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "NONCOMBUSTIBLE",
+    "Key2": "900000",
+    "Factor": 0.801,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "NONCOMBUSTIBLE",
+    "Key2": "950000",
+    "Factor": 0.793,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "NONCOMBUSTIBLE",
+    "Key2": "1000000",
+    "Factor": 0.786,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "NONCOMBUSTIBLE",
+    "Key2": "1250000",
+    "Factor": 0.757,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "NONCOMBUSTIBLE",
+    "Key2": "1500000",
+    "Factor": 0.733,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "NONCOMBUSTIBLE",
+    "Key2": "1750000",
+    "Factor": 0.714,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "NONCOMBUSTIBLE",
+    "Key2": "2000000",
+    "Factor": 0.697,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "NONCOMBUSTIBLE",
+    "Key2": "2250000",
+    "Factor": 0.683,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "NONCOMBUSTIBLE",
+    "Key2": "2500000",
+    "Factor": 0.671,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "NONCOMBUSTIBLE",
+    "Key2": "2750000",
+    "Factor": 0.66,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "NONCOMBUSTIBLE",
+    "Key2": "3000000",
+    "Factor": 0.65,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "NONCOMBUSTIBLE",
+    "Key2": "3250000",
+    "Factor": 0.641,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "NONCOMBUSTIBLE",
+    "Key2": "3500000",
+    "Factor": 0.633,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "NONCOMBUSTIBLE",
+    "Key2": "3750000",
+    "Factor": 0.625,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "NONCOMBUSTIBLE",
+    "Key2": "4000000",
+    "Factor": 0.618,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "NONCOMBUSTIBLE",
+    "Key2": "4250000",
+    "Factor": 0.612,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "NONCOMBUSTIBLE",
+    "Key2": "4500000",
+    "Factor": 0.606,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "NONCOMBUSTIBLE",
+    "Key2": "4750000",
+    "Factor": 0.6,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "NONCOMBUSTIBLE",
+    "Key2": "5000000",
+    "Factor": 0.595,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "NONCOMBUSTIBLE",
+    "Key2": "5500000",
+    "Factor": 0.585,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "NONCOMBUSTIBLE",
+    "Key2": "6000000",
+    "Factor": 0.576,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "NONCOMBUSTIBLE",
+    "Key2": "6500000",
+    "Factor": 0.569,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "NONCOMBUSTIBLE",
+    "Key2": "7000000",
+    "Factor": 0.561,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "NONCOMBUSTIBLE",
+    "Key2": "7500000",
+    "Factor": 0.555,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "NONCOMBUSTIBLE",
+    "Key2": "8000000",
+    "Factor": 0.548,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "NONCOMBUSTIBLE",
+    "Key2": "8500000",
+    "Factor": 0.543,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "NONCOMBUSTIBLE",
+    "Key2": "9000000",
+    "Factor": 0.537,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "NONCOMBUSTIBLE",
+    "Key2": "9500000",
+    "Factor": 0.532,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "NONCOMBUSTIBLE",
+    "Key2": "10000000",
+    "Factor": 0.528,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "MASONRYNONCOMB",
+    "Key2": "50000",
+    "Factor": 1.258,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "MASONRYNONCOMB",
+    "Key2": "75000",
+    "Factor": 1.258,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "MASONRYNONCOMB",
+    "Key2": "100000",
+    "Factor": 1.258,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "MASONRYNONCOMB",
+    "Key2": "125000",
+    "Factor": 1.19,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "MASONRYNONCOMB",
+    "Key2": "150000",
+    "Factor": 1.137,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "MASONRYNONCOMB",
+    "Key2": "175000",
+    "Factor": 1.094,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "MASONRYNONCOMB",
+    "Key2": "200000",
+    "Factor": 1.058,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "MASONRYNONCOMB",
+    "Key2": "225000",
+    "Factor": 1.027,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "MASONRYNONCOMB",
+    "Key2": "250000",
+    "Factor": 1,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "MASONRYNONCOMB",
+    "Key2": "275000",
+    "Factor": 0.976,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "MASONRYNONCOMB",
+    "Key2": "300000",
+    "Factor": 0.955,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "MASONRYNONCOMB",
+    "Key2": "325000",
+    "Factor": 0.936,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "MASONRYNONCOMB",
+    "Key2": "350000",
+    "Factor": 0.919,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "MASONRYNONCOMB",
+    "Key2": "375000",
+    "Factor": 0.903,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "MASONRYNONCOMB",
+    "Key2": "400000",
+    "Factor": 0.889,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "MASONRYNONCOMB",
+    "Key2": "425000",
+    "Factor": 0.875,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "MASONRYNONCOMB",
+    "Key2": "450000",
+    "Factor": 0.863,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "MASONRYNONCOMB",
+    "Key2": "475000",
+    "Factor": 0.851,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "MASONRYNONCOMB",
+    "Key2": "500000",
+    "Factor": 0.841,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "MASONRYNONCOMB",
+    "Key2": "550000",
+    "Factor": 0.821,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "MASONRYNONCOMB",
+    "Key2": "600000",
+    "Factor": 0.803,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "MASONRYNONCOMB",
+    "Key2": "650000",
+    "Factor": 0.787,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "MASONRYNONCOMB",
+    "Key2": "700000",
+    "Factor": 0.773,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "MASONRYNONCOMB",
+    "Key2": "750000",
+    "Factor": 0.759,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "MASONRYNONCOMB",
+    "Key2": "800000",
+    "Factor": 0.747,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "MASONRYNONCOMB",
+    "Key2": "850000",
+    "Factor": 0.736,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "MASONRYNONCOMB",
+    "Key2": "900000",
+    "Factor": 0.725,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "MASONRYNONCOMB",
+    "Key2": "950000",
+    "Factor": 0.716,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "MASONRYNONCOMB",
+    "Key2": "1000000",
+    "Factor": 0.706,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "MASONRYNONCOMB",
+    "Key2": "1250000",
+    "Factor": 0.668,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "MASONRYNONCOMB",
+    "Key2": "1500000",
+    "Factor": 0.638,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "MASONRYNONCOMB",
+    "Key2": "1750000",
+    "Factor": 0.614,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "MASONRYNONCOMB",
+    "Key2": "2000000",
+    "Factor": 0.594,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "MASONRYNONCOMB",
+    "Key2": "2250000",
+    "Factor": 0.577,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "MASONRYNONCOMB",
+    "Key2": "2500000",
+    "Factor": 0.561,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "MASONRYNONCOMB",
+    "Key2": "2750000",
+    "Factor": 0.548,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "MASONRYNONCOMB",
+    "Key2": "3000000",
+    "Factor": 0.536,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "MASONRYNONCOMB",
+    "Key2": "3250000",
+    "Factor": 0.526,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "MASONRYNONCOMB",
+    "Key2": "3500000",
+    "Factor": 0.516,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "MASONRYNONCOMB",
+    "Key2": "3750000",
+    "Factor": 0.507,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "MASONRYNONCOMB",
+    "Key2": "4000000",
+    "Factor": 0.499,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "MASONRYNONCOMB",
+    "Key2": "4250000",
+    "Factor": 0.492,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "MASONRYNONCOMB",
+    "Key2": "4500000",
+    "Factor": 0.485,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "MASONRYNONCOMB",
+    "Key2": "4750000",
+    "Factor": 0.478,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "MASONRYNONCOMB",
+    "Key2": "5000000",
+    "Factor": 0.472,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "MASONRYNONCOMB",
+    "Key2": "5500000",
+    "Factor": 0.461,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "MASONRYNONCOMB",
+    "Key2": "6000000",
+    "Factor": 0.451,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "MASONRYNONCOMB",
+    "Key2": "6500000",
+    "Factor": 0.442,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "MASONRYNONCOMB",
+    "Key2": "7000000",
+    "Factor": 0.434,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "MASONRYNONCOMB",
+    "Key2": "7500000",
+    "Factor": 0.426,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "MASONRYNONCOMB",
+    "Key2": "8000000",
+    "Factor": 0.419,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "MASONRYNONCOMB",
+    "Key2": "8500000",
+    "Factor": 0.413,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "MASONRYNONCOMB",
+    "Key2": "9000000",
+    "Factor": 0.407,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "MASONRYNONCOMB",
+    "Key2": "9500000",
+    "Factor": 0.402,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "MASONRYNONCOMB",
+    "Key2": "10000000",
+    "Factor": 0.397,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FIRERESISTIVE",
+    "Key2": "50000",
+    "Factor": 1.258,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FIRERESISTIVE",
+    "Key2": "75000",
+    "Factor": 1.258,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FIRERESISTIVE",
+    "Key2": "100000",
+    "Factor": 1.258,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FIRERESISTIVE",
+    "Key2": "125000",
+    "Factor": 1.19,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FIRERESISTIVE",
+    "Key2": "150000",
+    "Factor": 1.137,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FIRERESISTIVE",
+    "Key2": "175000",
+    "Factor": 1.094,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FIRERESISTIVE",
+    "Key2": "200000",
+    "Factor": 1.058,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FIRERESISTIVE",
+    "Key2": "225000",
+    "Factor": 1.027,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FIRERESISTIVE",
+    "Key2": "250000",
+    "Factor": 1,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FIRERESISTIVE",
+    "Key2": "275000",
+    "Factor": 0.976,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FIRERESISTIVE",
+    "Key2": "300000",
+    "Factor": 0.955,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FIRERESISTIVE",
+    "Key2": "325000",
+    "Factor": 0.936,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FIRERESISTIVE",
+    "Key2": "350000",
+    "Factor": 0.919,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FIRERESISTIVE",
+    "Key2": "375000",
+    "Factor": 0.903,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FIRERESISTIVE",
+    "Key2": "400000",
+    "Factor": 0.889,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FIRERESISTIVE",
+    "Key2": "425000",
+    "Factor": 0.875,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FIRERESISTIVE",
+    "Key2": "450000",
+    "Factor": 0.863,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FIRERESISTIVE",
+    "Key2": "475000",
+    "Factor": 0.851,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FIRERESISTIVE",
+    "Key2": "500000",
+    "Factor": 0.841,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FIRERESISTIVE",
+    "Key2": "550000",
+    "Factor": 0.821,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FIRERESISTIVE",
+    "Key2": "600000",
+    "Factor": 0.803,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FIRERESISTIVE",
+    "Key2": "650000",
+    "Factor": 0.787,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FIRERESISTIVE",
+    "Key2": "700000",
+    "Factor": 0.773,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FIRERESISTIVE",
+    "Key2": "750000",
+    "Factor": 0.759,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FIRERESISTIVE",
+    "Key2": "800000",
+    "Factor": 0.747,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FIRERESISTIVE",
+    "Key2": "850000",
+    "Factor": 0.736,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FIRERESISTIVE",
+    "Key2": "900000",
+    "Factor": 0.725,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FIRERESISTIVE",
+    "Key2": "950000",
+    "Factor": 0.716,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FIRERESISTIVE",
+    "Key2": "1000000",
+    "Factor": 0.706,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FIRERESISTIVE",
+    "Key2": "1250000",
+    "Factor": 0.668,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FIRERESISTIVE",
+    "Key2": "1500000",
+    "Factor": 0.638,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FIRERESISTIVE",
+    "Key2": "1750000",
+    "Factor": 0.614,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FIRERESISTIVE",
+    "Key2": "2000000",
+    "Factor": 0.594,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FIRERESISTIVE",
+    "Key2": "2250000",
+    "Factor": 0.577,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FIRERESISTIVE",
+    "Key2": "2500000",
+    "Factor": 0.561,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FIRERESISTIVE",
+    "Key2": "2750000",
+    "Factor": 0.548,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FIRERESISTIVE",
+    "Key2": "3000000",
+    "Factor": 0.536,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FIRERESISTIVE",
+    "Key2": "3250000",
+    "Factor": 0.526,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FIRERESISTIVE",
+    "Key2": "3500000",
+    "Factor": 0.516,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FIRERESISTIVE",
+    "Key2": "3750000",
+    "Factor": 0.507,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FIRERESISTIVE",
+    "Key2": "4000000",
+    "Factor": 0.499,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FIRERESISTIVE",
+    "Key2": "4250000",
+    "Factor": 0.492,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FIRERESISTIVE",
+    "Key2": "4500000",
+    "Factor": 0.485,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FIRERESISTIVE",
+    "Key2": "4750000",
+    "Factor": 0.478,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FIRERESISTIVE",
+    "Key2": "5000000",
+    "Factor": 0.472,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FIRERESISTIVE",
+    "Key2": "5500000",
+    "Factor": 0.461,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FIRERESISTIVE",
+    "Key2": "6000000",
+    "Factor": 0.451,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FIRERESISTIVE",
+    "Key2": "6500000",
+    "Factor": 0.442,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FIRERESISTIVE",
+    "Key2": "7000000",
+    "Factor": 0.434,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FIRERESISTIVE",
+    "Key2": "7500000",
+    "Factor": 0.426,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FIRERESISTIVE",
+    "Key2": "8000000",
+    "Factor": 0.419,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FIRERESISTIVE",
+    "Key2": "8500000",
+    "Factor": 0.413,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FIRERESISTIVE",
+    "Key2": "9000000",
+    "Factor": 0.407,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FIRERESISTIVE",
+    "Key2": "9500000",
+    "Factor": 0.402,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "FIRERESISTIVE",
+    "Key2": "10000000",
+    "Factor": 0.397,
+    "EffStart": "2026-02-01"
+  }
+]

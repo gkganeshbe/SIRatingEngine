@@ -7,6 +7,9 @@
     <LangVersion>12.0</LangVersion>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="OpenIddict.AspNetCore" Version="5.4.0" />
+    <PackageReference Include="Serilog.AspNetCore" Version="8.0.3" />
+    <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
     <ProjectReference Include="..\RatingEngine.Core\RatingEngine.Core.csproj" />
     <ProjectReference Include="..\RatingEngine.Data\RatingEngine.Data.csproj" />
   </ItemGroup>

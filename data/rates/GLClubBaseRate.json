@@ -1,9 +1,0 @@
-[
-  { "Key1": "501", "Factor": 53.6, "EffStart": "2026-02-01" },
-  { "Key1": "504", "Factor": 59.3, "EffStart": "2026-02-01" },
-  { "Key1": "506", "Factor": 55.6, "EffStart": "2026-02-01" },
-  { "Key1": "507", "Factor": 108,  "EffStart": "2026-02-01" },
-  { "Key1": "508", "Factor": 80.4, "EffStart": "2026-02-01" },
-  { "Key1": "509", "Factor": 121,  "EffStart": "2026-02-01" },
-  { "Key1": "514", "Factor": 101,  "EffStart": "2026-02-01" }
-]

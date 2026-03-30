@@ -8,6 +8,7 @@
     "NOTE: Only the PRIMARY coverage config exists today; COV-B/C/D/E are illustrative."
   ],
   "productCode": "HO-PRIMARY",
+  "rateState": "NJ",
   "policyFrom": "2026-01-01",
   "policyTo": "2027-01-01",
   "segments": [
@@ -15,7 +16,7 @@
       "_label": "Segment 1 – Inception (104 days)",
       "from": "2026-01-01",
       "to": "2026-04-15",
-      "effectiveDate": "2026-01-01",
+      "rateEffectiveDate": "2026-01-01",
       "property": {
         "occupancy": "OWNER",
         "zone": "Z1",
@@ -97,7 +98,7 @@
       ],
       "from": "2026-04-15",
       "to": "2026-09-01",
-      "effectiveDate": "2026-01-01",
+      "rateEffectiveDate": "2026-01-01",
       "property": {
         "occupancy": "OWNER",
         "zone": "Z1",
@@ -180,7 +181,7 @@
       ],
       "from": "2026-09-01",
       "to": "2027-01-01",
-      "effectiveDate": "2026-01-01",
+      "rateEffectiveDate": "2026-01-01",
       "property": {
         "occupancy": "OWNER",
         "zone": "Z1",

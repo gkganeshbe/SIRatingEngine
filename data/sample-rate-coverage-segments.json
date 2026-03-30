@@ -14,6 +14,7 @@
     "NOTE: Only the PRIMARY coverage config exists today; COV-B/C/D/E are illustrative."
   ],
   "productCode": "HO-PRIMARY",
+  "rateState": "NJ",
   "policyFrom": "2026-01-01",
   "policyTo": "2027-01-01",
   "coverages": [
@@ -26,7 +27,7 @@
           "_label": "Inception (104 days, 350k dwelling)",
           "from": "2026-01-01",
           "to": "2026-04-15",
-          "effectiveDate": "2026-01-01",
+          "rateEffectiveDate": "2026-01-01",
           "property": {
             "occupancy": "OWNER",
             "zone": "Z1",
@@ -61,7 +62,7 @@
           "_label": "After Endorsement 1 (139 days, pool added, 375k dwelling)",
           "from": "2026-04-15",
           "to": "2026-09-01",
-          "effectiveDate": "2026-01-01",
+          "rateEffectiveDate": "2026-01-01",
           "property": {
             "occupancy": "OWNER",
             "zone": "Z1",
@@ -96,7 +97,7 @@
           "_label": "After Endorsement 2 (122 days, canines added, 400k dwelling)",
           "from": "2026-09-01",
           "to": "2027-01-01",
-          "effectiveDate": "2026-01-01",
+          "rateEffectiveDate": "2026-01-01",
           "property": {
             "occupancy": "OWNER",
             "zone": "Z1",
@@ -138,7 +139,7 @@
           "_label": "Inception (104 days, 35k)",
           "from": "2026-01-01",
           "to": "2026-04-15",
-          "effectiveDate": "2026-01-01",
+          "rateEffectiveDate": "2026-01-01",
           "property": {
             "occupancy": "OWNER",
             "zone": "Z1",
@@ -172,7 +173,7 @@
           "_label": "After Endorsement 1 (139 days, pool added, 37.5k)",
           "from": "2026-04-15",
           "to": "2026-09-01",
-          "effectiveDate": "2026-01-01",
+          "rateEffectiveDate": "2026-01-01",
           "property": {
             "occupancy": "OWNER",
             "zone": "Z1",
@@ -206,7 +207,7 @@
           "_label": "After Endorsement 2 (122 days, canines added, 40k)",
           "from": "2026-09-01",
           "to": "2027-01-01",
-          "effectiveDate": "2026-01-01",
+          "rateEffectiveDate": "2026-01-01",
           "property": {
             "occupancy": "OWNER",
             "zone": "Z1",
@@ -247,7 +248,7 @@
           "_label": "Inception through Sep 01 (243 days, 175k contents)",
           "from": "2026-01-01",
           "to": "2026-09-01",
-          "effectiveDate": "2026-01-01",
+          "rateEffectiveDate": "2026-01-01",
           "property": {
             "occupancy": "OWNER",
             "zone": "Z1",
@@ -283,7 +284,7 @@
           "_note": "Property reflects full state at Sep 01 even though the CovC change is just a limit bump.",
           "from": "2026-09-01",
           "to": "2027-01-01",
-          "effectiveDate": "2026-01-01",
+          "rateEffectiveDate": "2026-01-01",
           "property": {
             "occupancy": "OWNER",
             "zone": "Z1",
@@ -325,7 +326,7 @@
           "_label": "Inception (104 days, 70k)",
           "from": "2026-01-01",
           "to": "2026-04-15",
-          "effectiveDate": "2026-01-01",
+          "rateEffectiveDate": "2026-01-01",
           "property": {
             "occupancy": "OWNER",
             "zone": "Z1",
@@ -357,7 +358,7 @@
           "_label": "After Endorsement 1 (139 days, pool added, 75k)",
           "from": "2026-04-15",
           "to": "2026-09-01",
-          "effectiveDate": "2026-01-01",
+          "rateEffectiveDate": "2026-01-01",
           "property": {
             "occupancy": "OWNER",
             "zone": "Z1",
@@ -389,7 +390,7 @@
           "_label": "After Endorsement 2 (122 days, canines added, 80k)",
           "from": "2026-09-01",
           "to": "2027-01-01",
-          "effectiveDate": "2026-01-01",
+          "rateEffectiveDate": "2026-01-01",
           "property": {
             "occupancy": "OWNER",
             "zone": "Z1",
@@ -428,7 +429,7 @@
           "_label": "Inception (104 days, no pool, 300k liability limit)",
           "from": "2026-01-01",
           "to": "2026-04-15",
-          "effectiveDate": "2026-01-01",
+          "rateEffectiveDate": "2026-01-01",
           "property": {
             "occupancy": "OWNER",
             "zone": "Z1",
@@ -462,7 +463,7 @@
           "_note": "The property snapshot reflects the LATEST state at each segment start. CovE params unchanged — only the property hazard changed, which the CovE pipeline reads via $risk.hasPool.",
           "from": "2026-04-15",
           "to": "2027-01-01",
-          "effectiveDate": "2026-01-01",
+          "rateEffectiveDate": "2026-01-01",
           "property": {
             "occupancy": "OWNER",
             "zone": "Z1",

@@ -36,9 +36,12 @@ CREATE TABLE CoverageRef (
 -- Decoupled from ProductManifest so a coverage version can be shared across
 -- multiple product versions if needed.
 
+-- State is a first-class pipeline routing dimension. Use '*' for pipelines that
+-- apply to all states (wildcard fallback). Exact state match takes priority.
 CREATE TABLE CoverageConfig (
     Id           INT           IDENTITY(1,1) PRIMARY KEY,
     ProductCode  VARCHAR(50)   NOT NULL,
+    State        VARCHAR(10)   NOT NULL DEFAULT '*',
     CoverageCode VARCHAR(50)   NOT NULL,
     Version      VARCHAR(20)   NOT NULL,
     EffStart     DATE          NOT NULL,
@@ -47,7 +50,7 @@ CREATE TABLE CoverageConfig (
     CreatedBy    VARCHAR(100)  NULL,
     ModifiedAt   DATETIME2     NULL,
     ModifiedBy   VARCHAR(100)  NULL,
-    CONSTRAINT UQ_CoverageConfig UNIQUE (ProductCode, CoverageCode, Version)
+    CONSTRAINT UQ_CoverageConfig UNIQUE (ProductCode, State, CoverageCode, Version)
 );
 
 -- Perils applicable to a coverage (e.g. GRP1, GRP2, SPL, GL).
@@ -108,7 +111,9 @@ CREATE TABLE PipelineStepKey (
 );
 
 -- ── Rate tables ───────────────────────────────────────────────────────────────
--- One row in RateTable per logical rate table (e.g. "CondoBaseRate").
+-- One row in RateTable per logical rate table scoped to a CoverageConfig.
+-- Names only need to be unique within a CoverageConfig (e.g. "BaseRate" can
+-- exist in every coverage without collision).
 -- LookupType drives engine behaviour:
 --   EXACT       – exact key match (wildcard "*" allowed per row)
 --   INTERPOLATE – one key column holds numeric breakpoints; engine interpolates
@@ -117,9 +122,9 @@ CREATE TABLE PipelineStepKey (
 
 CREATE TABLE RateTable (
     Id                  INT           IDENTITY(1,1) PRIMARY KEY,
+    CoverageConfigId    INT           NOT NULL REFERENCES CoverageConfig(Id) ON DELETE CASCADE,
     Name                VARCHAR(100)  NOT NULL,
     Description         VARCHAR(500)  NULL,
-    ProductCode         VARCHAR(50)   NULL,    -- NULL = shared across products
     LookupType          VARCHAR(20)   NOT NULL DEFAULT 'EXACT',
     InterpolationKeyCol VARCHAR(20)   NULL,    -- Key1..Key5: which column is the interp dimension
     EffStart            DATE          NOT NULL,
@@ -128,7 +133,7 @@ CREATE TABLE RateTable (
     CreatedBy           VARCHAR(100)  NULL,
     ModifiedAt          DATETIME2     NULL,
     ModifiedBy          VARCHAR(100)  NULL,
-    CONSTRAINT UQ_RateTable UNIQUE (Name),
+    CONSTRAINT UQ_RateTable UNIQUE (CoverageConfigId, Name),
     CONSTRAINT CK_LookupType CHECK (LookupType IN ('EXACT','INTERPOLATE','RANGE','WILDCARD'))
 );
 
@@ -210,3 +215,15 @@ CREATE INDEX IX_RateTableRow_TableEff
 CREATE INDEX IX_RateTableRow_Keys
     ON RateTableRow (RateTableId, Key1, Key2, Key3, EffStart)
     INCLUDE (Key4, Key5, Factor, Additive, ExpireAt);
+
+-- Supports engine's scoped rate table load: all tables for a coverage config.
+CREATE INDEX IX_RateTable_CoverageConfigId
+    ON RateTable (CoverageConfigId, Name);
+
+-- Covering index for the engine's state-aware pipeline resolution:
+--   WHERE ProductCode = ? AND (State = ? OR State = '*') AND CoverageCode = ?
+--         AND EffStart <= ? AND (ExpireAt IS NULL OR ExpireAt > ?)
+--   ORDER BY CASE WHEN State = ? THEN 0 ELSE 1 END, EffStart DESC
+CREATE INDEX IX_CoverageConfig_StateLookup
+    ON CoverageConfig (ProductCode, State, CoverageCode, EffStart)
+    INCLUDE (Id, Version, ExpireAt);

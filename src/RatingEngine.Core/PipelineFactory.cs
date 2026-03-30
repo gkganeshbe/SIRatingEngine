@@ -153,32 +153,83 @@ public sealed class JsonPipelineFactory : IPipelineFactory
             : MidpointRounding.AwayFromZero;
 }
 
+/// <summary>
+/// File-system IRateLookupFactory.
+/// Rate table JSON files live in subdirectories named after the coverage config:
+///   {ratesBaseDir}/{productCode}.{state}.{coverageCode}.{version}/TableName.json
+/// Results are cached in memory for the lifetime of the factory (singleton-safe).
+/// </summary>
+public sealed class FileRateLookupFactory : IRateLookupFactory
+{
+    private readonly string _ratesBaseDir;
+    private readonly System.Collections.Concurrent.ConcurrentDictionary<string, InMemoryRateLookup> _cache = new();
+
+    public FileRateLookupFactory(string ratesBaseDir) => _ratesBaseDir = ratesBaseDir;
+
+    public IRateLookup CreateForCoverage(CoverageConfig coverage)
+    {
+        var key = $"{coverage.ProductCode}.{coverage.State}.{coverage.CoverageCode}.{coverage.Version}";
+        return _cache.GetOrAdd(key, _ => InMemoryRateLookup.FromDirectory(Path.Combine(_ratesBaseDir, key)));
+    }
+}
+
 public sealed class FileProductManifestRepository : IProductManifestRepository
 {
     private readonly string _configDir;
+    private static readonly JsonSerializerOptions _json = new() { PropertyNameCaseInsensitive = true };
+
     public FileProductManifestRepository(string configDir) => _configDir = configDir;
 
-    public Task<ProductManifest?> GetAsync(string productCode, string version)
+    public Task<ProductManifest?> GetAsync(string productCode, DateOnly effectiveDate)
     {
         var productsDir = Path.Combine(_configDir, "products");
-        var file = Directory.GetFiles(productsDir, $"{productCode}.{version}.json", SearchOption.AllDirectories).FirstOrDefault();
-        if (file == null) return Task.FromResult<ProductManifest?>(null);
-        var cfg = JsonSerializer.Deserialize<ProductManifest>(File.ReadAllText(file), new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-        return Task.FromResult(cfg);
+        var candidates = Directory.GetFiles(productsDir, $"{productCode}.*.json", SearchOption.AllDirectories);
+
+        ProductManifest? best = null;
+        foreach (var file in candidates)
+        {
+            var cfg = JsonSerializer.Deserialize<ProductManifest>(File.ReadAllText(file), _json);
+            if (cfg is null || cfg.EffectiveStart > effectiveDate) continue;
+            if (best is null || cfg.EffectiveStart > best.EffectiveStart)
+                best = cfg;
+        }
+        return Task.FromResult(best);
     }
 }
 
 public sealed class FileCoverageConfigRepository : ICoverageConfigRepository
 {
     private readonly string _configDir;
+    private static readonly JsonSerializerOptions _json = new() { PropertyNameCaseInsensitive = true };
+
     public FileCoverageConfigRepository(string configDir) => _configDir = configDir;
 
-    public Task<CoverageConfig?> GetAsync(string productCode, string coverageCode, string version)
+    // File naming: {productCode}.{state}.{coverageCode}.{version}.json
+    // State "*" in the file means the pipeline applies to all states (wildcard fallback).
+    public Task<CoverageConfig?> GetAsync(string productCode, string state, string coverageCode, DateOnly effectiveDate)
     {
         var coveragesDir = Path.Combine(_configDir, "coverages");
-        var file = Directory.GetFiles(coveragesDir, $"{productCode}.{coverageCode}.{version}.json", SearchOption.AllDirectories).FirstOrDefault();
-        if (file == null) return Task.FromResult<CoverageConfig?>(null);
-        var cfg = JsonSerializer.Deserialize<CoverageConfig>(File.ReadAllText(file), new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-        return Task.FromResult(cfg);
+        var candidates = Directory.GetFiles(coveragesDir, $"{productCode}.*.{coverageCode}.*.json", SearchOption.AllDirectories);
+
+        CoverageConfig? best = null;
+        foreach (var file in candidates)
+        {
+            var cfg = JsonSerializer.Deserialize<CoverageConfig>(File.ReadAllText(file), _json);
+            if (cfg is null || cfg.EffectiveStart > effectiveDate) continue;
+            // Skip if state doesn't match (neither exact nor wildcard)
+            if (!string.Equals(cfg.State, state, StringComparison.OrdinalIgnoreCase) &&
+                cfg.State != "*") continue;
+
+            if (best is null) { best = cfg; continue; }
+
+            // Exact state match beats wildcard; within same specificity, later EffectiveStart wins.
+            var cfgIsExact  = string.Equals(cfg.State,  state, StringComparison.OrdinalIgnoreCase);
+            var bestIsExact = string.Equals(best.State, state, StringComparison.OrdinalIgnoreCase);
+
+            if (cfgIsExact && !bestIsExact) { best = cfg; continue; }
+            if (!cfgIsExact && bestIsExact) continue;
+            if (cfg.EffectiveStart > best.EffectiveStart) best = cfg;
+        }
+        return Task.FromResult(best);
     }
 }

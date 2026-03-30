@@ -8,8 +8,19 @@ using RatingEngine.Core;
 using RatingEngine.Data;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using OpenIddict.Validation.AspNetCore;
+using Serilog;
+
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console()
+    .CreateBootstrapLogger();
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Host.UseSerilog((ctx, services, lc) => lc
+    .ReadFrom.Configuration(ctx.Configuration)
+    .ReadFrom.Services(services)
+    .Enrich.FromLogContext());
 
 var configDir = Path.Combine(AppContext.BaseDirectory, "..", "RatingEngine.Config");
 var storageProvider = builder.Configuration["StorageProvider"] ?? "FileSystem";
@@ -29,6 +40,57 @@ builder.Services.AddScoped<ITenantContext>(sp => sp.GetRequiredService<TenantCon
 
 builder.Services.AddSingleton<IPipelineFactory, JsonPipelineFactory>();
 
+// ── Authentication / Authorization ───────────────────────────────────────────
+var authMode = builder.Configuration["Auth:Mode"] ?? "IdentityServer";
+
+if (authMode == "ApiKey")
+{
+    var apiKeys = builder.Configuration.GetSection("Auth:ApiKeys").Get<string[]>() ?? [];
+
+    builder.Services
+        .AddAuthentication(ApiKeyAuthenticationOptions.SchemeName)
+        .AddScheme<ApiKeyAuthenticationOptions, ApiKeyAuthenticationHandler>(
+            ApiKeyAuthenticationOptions.SchemeName,
+            opts => opts.ApiKeys = apiKeys);
+
+    builder.Services.AddAuthorization(options =>
+    {
+        options.AddPolicy("QuoteAccess", policy =>
+        {
+            policy.AuthenticationSchemes.Add(ApiKeyAuthenticationOptions.SchemeName);
+            policy.RequireAuthenticatedUser();
+            policy.RequireClaim("scope", "quote.access");
+        });
+    });
+}
+else
+{
+    var authority     = builder.Configuration["IdentityServer:Authority"]!;
+    var quoteClientId = builder.Configuration["IdentityServer:QuoteApiClientId"]!;
+    var quoteSecret   = builder.Configuration["IdentityServer:QuoteApiClientSecret"]!;
+
+    builder.Services.AddOpenIddict()
+        .AddValidation(options =>
+        {
+            options.SetIssuer(authority);
+            options.UseIntrospection()
+                   .SetClientId(quoteClientId)
+                   .SetClientSecret(quoteSecret);
+            options.UseSystemNetHttp();
+            options.UseAspNetCore();
+        });
+
+    builder.Services.AddAuthorization(options =>
+    {
+        options.AddPolicy("QuoteAccess", policy =>
+        {
+            policy.AuthenticationSchemes.Add(OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme);
+            policy.RequireAuthenticatedUser();
+            policy.RequireClaim("scope", "quote.access");
+        });
+    });
+}
+
 if (storageProvider == "Database")
 {
     // ── Database storage ──────────────────────────────────────────────────────
@@ -38,7 +100,8 @@ if (storageProvider == "Database")
     builder.Services.AddScoped<DbConnectionFactory>();
     builder.Services.AddScoped<IProductManifestRepository, SqlProductManifestRepository>();
     builder.Services.AddScoped<ICoverageConfigRepository, SqlCoverageConfigRepository>();
-    builder.Services.AddScoped<IRateLookup, DbRateLookup>();
+    // IRateLookupFactory is scoped: each request creates lookups scoped to the resolved CoverageConfig.DbId.
+    builder.Services.AddScoped<IRateLookupFactory, DbRateLookupFactory>();
 }
 else
 {
@@ -49,41 +112,44 @@ else
     builder.Services.AddSingleton<ICoverageConfigRepository>(sp =>
         new FileCoverageConfigRepository(configDir));
 
-    builder.Services.AddSingleton<IRateLookup>(sp =>
-        InMemoryRateLookup.FromDirectory(Path.Combine(AppContext.BaseDirectory, "..", "..", "data", "rates")));
+    // Rate tables live in per-coverage subdirs: data/rates/{productCode}.{state}.{coverageCode}.{version}/
+    var ratesDir = Path.Combine(AppContext.BaseDirectory, "..", "..", "data", "rates");
+    builder.Services.AddSingleton<IRateLookupFactory>(new FileRateLookupFactory(ratesDir));
 }
 
 var app = builder.Build();
 
 // ── Middleware ────────────────────────────────────────────────────────────────
 // Must run before routing so that every endpoint is protected.
+app.UseAuthentication();
+app.UseAuthorization();
 app.UseMiddleware<TenantMiddleware>();
 
 // ── Endpoint: single coverage rate ─────────────────────────────────────────
 // Risk is a flat open dictionary – any LOB-specific attributes can be included.
-app.MapPost("/quote/{productVersion}/rate", async (
-    string productVersion, RatingRequest req,
+app.MapPost("/quote/rate", async (
+    RatingRequest req,
     IProductManifestRepository manifestRepo,
     ICoverageConfigRepository coverageRepo,
-    IPipelineFactory factory, IRateLookup lookup) =>
+    IPipelineFactory factory, IRateLookupFactory lookupFactory) =>
 {
-    var manifest = await manifestRepo.GetAsync(req.ProductCode, productVersion);
-    if (manifest is null) return Results.NotFound(new { message = "Product or version not found" });
+    var manifest = await manifestRepo.GetAsync(req.ProductCode, req.RateEffectiveDate);
+    if (manifest is null) return Results.NotFound(new { message = "Product not found or no active version for the effective date" });
 
     var covRef = manifest.Coverages.FirstOrDefault(c => c.CoverageCode == req.CoverageCode);
     if (covRef is null) return Results.NotFound(new { message = "Coverage not found in product manifest" });
 
-    var coverage = await coverageRepo.GetAsync(req.ProductCode, req.CoverageCode, covRef.Version);
-    if (coverage is null) return Results.NotFound(new { message = "Coverage config not found" });
+    var coverage = await coverageRepo.GetAsync(req.ProductCode, req.RateState, req.CoverageCode, req.RateEffectiveDate);
+    if (coverage is null) return Results.NotFound(new { message = "Coverage config not found for the given product/state/coverage/date" });
 
-    var jurisdiction = req.Risk.TryGetValue("State", out var state) ? state : string.Empty;
+    var lookup = lookupFactory.CreateForCoverage(coverage);
     var results = new List<object>();
     decimal coverageTotal = 0m;
 
     foreach (var peril in coverage.Perils)
     {
         var risk = new Dictionary<string, string>(req.Risk, StringComparer.OrdinalIgnoreCase);
-        var ctx = new RateContext(req.ProductCode, coverage.Version, req.EffectiveDate, jurisdiction, risk, peril, 0m);
+        var ctx = new RateContext(req.ProductCode, coverage.Version, req.RateEffectiveDate, req.RateState, risk, peril, 0m);
         var pipeline = factory.Build(coverage.Pipeline);
         var (premium, trace) = new PipelineRunner(pipeline, lookup).Run(ctx);
         results.Add(new { peril, premium, trace });
@@ -91,14 +157,14 @@ app.MapPost("/quote/{productVersion}/rate", async (
     }
 
     return Results.Ok(new { coveragePremium = coverageTotal, perils = results });
-}).WithName("Rate");
+}).WithName("Rate").RequireAuthorization("QuoteAccess");
 
 // ── Endpoint: policy-level segments ────────────────────────────────────────────
-app.MapPost("/quote/{productVersion}/rate-policy-segments", async (
-    string productVersion, PolicySegmentRequest req,
+app.MapPost("/quote/rate-policy-segments", async (
+    PolicySegmentRequest req,
     IProductManifestRepository manifestRepo,
     ICoverageConfigRepository coverageRepo,
-    IPipelineFactory factory, IRateLookup lookup) =>
+    IPipelineFactory factory, IRateLookupFactory lookupFactory) =>
 {
     if (req.Segments is null || req.Segments.Count == 0)
         return Results.BadRequest(new { message = "At least one segment is required" });
@@ -107,8 +173,8 @@ app.MapPost("/quote/{productVersion}/rate-policy-segments", async (
     if (totalPolicyDays <= 0)
         return Results.BadRequest(new { message = "PolicyTo must be after PolicyFrom" });
 
-    var manifest = await manifestRepo.GetAsync(req.ProductCode, productVersion);
-    if (manifest is null) return Results.NotFound(new { message = "Product or version not found" });
+    var manifest = await manifestRepo.GetAsync(req.ProductCode, req.PolicyFrom);
+    if (manifest is null) return Results.NotFound(new { message = "Product not found or no active version for the effective date" });
 
     var coverageAccum = new Dictionary<string, (string Name, decimal Total, List<object> Segments)>();
 
@@ -116,18 +182,19 @@ app.MapPost("/quote/{productVersion}/rate-policy-segments", async (
     {
         var segmentDays     = segment.To.DayNumber - segment.From.DayNumber;
         var prorationFactor = (decimal)segmentDays / totalPolicyDays;
-        var jurisdiction    = segment.Property.TryGetValue("State", out var s) ? s : string.Empty;
 
         foreach (var covInput in segment.Coverages)
         {
             var covRef = manifest.Coverages.FirstOrDefault(c => c.CoverageCode == covInput.Id);
             if (covRef is null) return Results.NotFound(new { message = $"Coverage '{covInput.Id}' not found in product manifest" });
 
-            var coverage = await coverageRepo.GetAsync(req.ProductCode, covInput.Id, covRef.Version);
+            var coverage = await coverageRepo.GetAsync(req.ProductCode, req.RateState, covInput.Id, segment.RateEffectiveDate);
             if (coverage is null) return Results.NotFound(new { message = $"Coverage config not found for '{covInput.Id}'" });
 
             decimal segmentPremium = 0m;
             object segmentDetail;
+
+            var lookup = lookupFactory.CreateForCoverage(coverage);
 
             if (covInput.RatingType == "SCHEDLEVEL" && covInput.Schedules?.Count > 0)
             {
@@ -137,7 +204,7 @@ app.MapPost("/quote/{productVersion}/rate-policy-segments", async (
                 {
                     var risk = RiskBag.Merge(RiskBag.Merge(segment.Property, covInput.Params), schedule);
                     var schedId = schedule.TryGetValue("ScheduleId", out var sid) ? sid : (schedResults.Count + 1).ToString();
-                    var (annualPremium, perilResults) = RunPerils(coverage, risk, req.ProductCode, segment.EffectiveDate, jurisdiction, factory, lookup);
+                    var (annualPremium, perilResults) = RunPerils(coverage, risk, req.ProductCode, segment.RateEffectiveDate, req.RateState, factory, lookup);
                     var proRatedPremium = Math.Round(annualPremium * prorationFactor, 2, MidpointRounding.AwayFromZero);
                     schedResults.Add(new { scheduleId = schedId, annualPremium, proRatedPremium, perils = perilResults });
                     segmentPremium += proRatedPremium;
@@ -147,7 +214,7 @@ app.MapPost("/quote/{productVersion}/rate-policy-segments", async (
             else
             {
                 var risk = RiskBag.Merge(segment.Property, covInput.Params);
-                var (annualPremium, perilResults) = RunPerils(coverage, risk, req.ProductCode, segment.EffectiveDate, jurisdiction, factory, lookup);
+                var (annualPremium, perilResults) = RunPerils(coverage, risk, req.ProductCode, segment.RateEffectiveDate, req.RateState, factory, lookup);
                 var proRatedPremium = Math.Round(annualPremium * prorationFactor, 2, MidpointRounding.AwayFromZero);
                 segmentPremium = proRatedPremium;
                 segmentDetail = new { from = segment.From, to = segment.To, prorationFactor, segmentPremium, perils = perilResults };
@@ -170,14 +237,14 @@ app.MapPost("/quote/{productVersion}/rate-policy-segments", async (
     }).ToList();
 
     return Results.Ok(new { policyTotal = coverageResults.Sum(c => c.coverageTotal), coverages = coverageResults });
-}).WithName("RatePolicySegments");
+}).WithName("RatePolicySegments").RequireAuthorization("QuoteAccess");
 
 // ── Endpoint: coverage-level segments ──────────────────────────────────────────
-app.MapPost("/quote/{productVersion}/rate-coverage-segments", async (
-    string productVersion, CoverageLevelSegmentRequest req,
+app.MapPost("/quote/rate-coverage-segments", async (
+    CoverageLevelSegmentRequest req,
     IProductManifestRepository manifestRepo,
     ICoverageConfigRepository coverageRepo,
-    IPipelineFactory factory, IRateLookup lookup) =>
+    IPipelineFactory factory, IRateLookupFactory lookupFactory) =>
 {
     if (req.Coverages is null || req.Coverages.Count == 0)
         return Results.BadRequest(new { message = "At least one coverage is required" });
@@ -186,8 +253,8 @@ app.MapPost("/quote/{productVersion}/rate-coverage-segments", async (
     if (totalPolicyDays <= 0)
         return Results.BadRequest(new { message = "PolicyTo must be after PolicyFrom" });
 
-    var manifest = await manifestRepo.GetAsync(req.ProductCode, productVersion);
-    if (manifest is null) return Results.NotFound(new { message = "Product or version not found" });
+    var manifest = await manifestRepo.GetAsync(req.ProductCode, req.PolicyFrom);
+    if (manifest is null) return Results.NotFound(new { message = "Product not found or no active version for the effective date" });
 
     var coverageResults = new List<object>();
 
@@ -199,9 +266,10 @@ app.MapPost("/quote/{productVersion}/rate-coverage-segments", async (
         var covRef = manifest.Coverages.FirstOrDefault(c => c.CoverageCode == covInput.Id);
         if (covRef is null) return Results.NotFound(new { message = $"Coverage '{covInput.Id}' not found in product manifest" });
 
-        var coverage = await coverageRepo.GetAsync(req.ProductCode, covInput.Id, covRef.Version);
+        var coverage = await coverageRepo.GetAsync(req.ProductCode, req.RateState, covInput.Id, req.PolicyFrom);
         if (coverage is null) return Results.NotFound(new { message = $"Coverage config not found for '{covInput.Id}'" });
 
+        var lookup = lookupFactory.CreateForCoverage(coverage);
         var segmentResults = new List<object>();
         decimal coverageTotal = 0m;
 
@@ -209,7 +277,6 @@ app.MapPost("/quote/{productVersion}/rate-coverage-segments", async (
         {
             var segmentDays     = segment.To.DayNumber - segment.From.DayNumber;
             var prorationFactor = (decimal)segmentDays / totalPolicyDays;
-            var jurisdiction    = segment.Property.TryGetValue("State", out var s) ? s : string.Empty;
             decimal segmentPremium = 0m;
             object segmentDetail;
 
@@ -220,7 +287,7 @@ app.MapPost("/quote/{productVersion}/rate-coverage-segments", async (
                 {
                     var risk = RiskBag.Merge(RiskBag.Merge(segment.Property, segment.Params), schedule);
                     var schedId = schedule.TryGetValue("ScheduleId", out var sid) ? sid : (schedResults.Count + 1).ToString();
-                    var (annualPremium, perilResults) = RunPerils(coverage, risk, req.ProductCode, segment.EffectiveDate, jurisdiction, factory, lookup);
+                    var (annualPremium, perilResults) = RunPerils(coverage, risk, req.ProductCode, segment.RateEffectiveDate, req.RateState, factory, lookup);
                     var proRatedPremium = Math.Round(annualPremium * prorationFactor, 2, MidpointRounding.AwayFromZero);
                     schedResults.Add(new { scheduleId = schedId, annualPremium, proRatedPremium, perils = perilResults });
                     segmentPremium += proRatedPremium;
@@ -230,7 +297,7 @@ app.MapPost("/quote/{productVersion}/rate-coverage-segments", async (
             else
             {
                 var risk = RiskBag.Merge(segment.Property, segment.Params);
-                var (annualPremium, perilResults) = RunPerils(coverage, risk, req.ProductCode, segment.EffectiveDate, jurisdiction, factory, lookup);
+                var (annualPremium, perilResults) = RunPerils(coverage, risk, req.ProductCode, segment.RateEffectiveDate, req.RateState, factory, lookup);
                 var proRatedPremium = Math.Round(annualPremium * prorationFactor, 2, MidpointRounding.AwayFromZero);
                 segmentPremium = proRatedPremium;
                 segmentDetail = new { from = segment.From, to = segment.To, prorationFactor, segmentPremium, perils = perilResults };
@@ -244,7 +311,7 @@ app.MapPost("/quote/{productVersion}/rate-coverage-segments", async (
     }
 
     return Results.Ok(new { policyTotal = coverageResults.Cast<dynamic>().Sum(c => (decimal)c.coverageTotal), coverages = coverageResults });
-}).WithName("RateCoverageSegments");
+}).WithName("RateCoverageSegments").RequireAuthorization("QuoteAccess");
 
 app.Run();
 
@@ -272,16 +339,20 @@ static (decimal total, List<object> perilResults) RunPerils(
 
 // ── Request models ───────────────────────────────────────────────────────────
 // Risk is a free-form dictionary — any LOB-specific attributes are valid.
+// RateState and RateEffectiveDate are first-class routing parameters used by
+// the engine to select the correct versioned pipeline; they are not risk factors.
 
 public record RatingRequest(
     string ProductCode,
+    string RateState,
     string CoverageCode,
-    DateOnly EffectiveDate,
+    DateOnly RateEffectiveDate,
     IReadOnlyDictionary<string, string> Risk
 );
 
 public record PolicySegmentRequest(
     string ProductCode,
+    string RateState,
     DateOnly PolicyFrom,
     DateOnly PolicyTo,
     IReadOnlyList<PolicySegment> Segments
@@ -289,6 +360,7 @@ public record PolicySegmentRequest(
 
 public record CoverageLevelSegmentRequest(
     string ProductCode,
+    string RateState,
     DateOnly PolicyFrom,
     DateOnly PolicyTo,
     IReadOnlyList<CoverageLevelInput> Coverages

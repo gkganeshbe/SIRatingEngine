@@ -81,17 +81,33 @@ public interface IPipelineFactory
 
 public interface IProductManifestRepository
 {
-    Task<ProductManifest?> GetAsync(string productCode, string version);
+    /// <summary>Returns the latest active manifest for <paramref name="productCode"/> whose EffectiveStart ≤ <paramref name="effectiveDate"/>.</summary>
+    Task<ProductManifest?> GetAsync(string productCode, DateOnly effectiveDate);
 }
 
 public interface ICoverageConfigRepository
 {
-    Task<CoverageConfig?> GetAsync(string productCode, string coverageCode, string version);
+    /// <summary>
+    /// Returns the latest active coverage config for the given product/state/coverage whose
+    /// EffectiveStart ≤ <paramref name="effectiveDate"/>. Exact state match takes priority over wildcard (*).
+    /// </summary>
+    Task<CoverageConfig?> GetAsync(string productCode, string state, string coverageCode, DateOnly effectiveDate);
+}
+
+public interface IRateLookupFactory
+{
+    /// <summary>Creates or retrieves a rate lookup scoped to the given coverage config.</summary>
+    IRateLookup CreateForCoverage(CoverageConfig coverage);
 }
 
 public record ProductManifest(string ProductCode, string Version, DateOnly EffectiveStart, IReadOnlyList<CoverageRef> Coverages);
 public record CoverageRef(string CoverageCode, string Version);
-public record CoverageConfig(string ProductCode, string CoverageCode, string Version, DateOnly EffectiveStart, IReadOnlyList<string> Perils, IReadOnlyList<StepConfig> Pipeline);
+
+public record CoverageConfig(string ProductCode, string State, string CoverageCode, string Version, DateOnly EffectiveStart, IReadOnlyList<string> Perils, IReadOnlyList<StepConfig> Pipeline)
+{
+    /// <summary>Database primary key — populated by SQL repositories; null for file-based configs.</summary>
+    public int? DbId { get; init; }
+}
 
 // ── Segment / coverage input models ────────────────────────────────────────────
 
@@ -122,7 +138,7 @@ public record CoverageInput(
 public record PolicySegment(
     DateOnly From,
     DateOnly To,
-    DateOnly EffectiveDate,
+    DateOnly RateEffectiveDate,
     IReadOnlyDictionary<string, string> Property,
     IReadOnlyList<CoverageInput> Coverages
 );
@@ -131,7 +147,7 @@ public record PolicySegment(
 public record CoverageSegment(
     DateOnly From,
     DateOnly To,
-    DateOnly EffectiveDate,
+    DateOnly RateEffectiveDate,
     IReadOnlyDictionary<string, string> Property,
     IReadOnlyDictionary<string, string> Params
 );

@@ -20,7 +20,7 @@ public class PipelineTests
     public void AOI_Interpolation_Returns_Correct_Factor(decimal coverageA, decimal expectedFactor)
     {
         var lookup = InMemoryRateLookup.FromDirectory(
-            Path.Combine(FindRepoRoot(), "data", "rates"));
+            Path.Combine(FindRepoRoot(), "data", "rates", "HO-PRIMARY.NJ.PRIMARY.2026.02"));
 
         var keys = new Dictionary<string, string>
         {
@@ -37,11 +37,11 @@ public class PipelineTests
     [Fact]
     public void Computes_Premium_With_Rounding_Checkpoints()
     {
-        var coveragePath = Path.Combine(FindRepoRoot(), "src", "RatingEngine.Config", "coverages", "HO-PRIMARY.PRIMARY.2026.02.json");
+        var coveragePath = Path.Combine(FindRepoRoot(), "src", "RatingEngine.Config", "coverages", "HO-PRIMARY.NJ.PRIMARY.2026.02.json");
         var coverage = System.Text.Json.JsonSerializer.Deserialize<CoverageConfig>(File.ReadAllText(coveragePath)!, new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
         var factory = new JsonPipelineFactory();
         var steps = factory.Build(coverage!.Pipeline);
-        var lookup = InMemoryRateLookup.FromDirectory(Path.Combine(FindRepoRoot(), "data", "rates"));
+        var lookup = InMemoryRateLookup.FromDirectory(Path.Combine(FindRepoRoot(), "data", "rates", "HO-PRIMARY.NJ.PRIMARY.2026.02"));
 
         var risk = BuildBaseRisk();
         var ctx = new RateContext("HO-PRIMARY", "2026.02", new DateOnly(2026,2,15), "NJ", risk, "FIRE", 0m);
@@ -312,11 +312,11 @@ public class PipelineTests
 
     private static (CoverageConfig coverage, InMemoryRateLookup lookup) LoadPrimary()
     {
-        var coveragePath = Path.Combine(FindRepoRoot(), "src", "RatingEngine.Config", "coverages", "HO-PRIMARY.PRIMARY.2026.02.json");
+        var coveragePath = Path.Combine(FindRepoRoot(), "src", "RatingEngine.Config", "coverages", "HO-PRIMARY.NJ.PRIMARY.2026.02.json");
         var coverage = System.Text.Json.JsonSerializer.Deserialize<CoverageConfig>(
             File.ReadAllText(coveragePath)!,
             new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true })!;
-        var lookup = InMemoryRateLookup.FromDirectory(Path.Combine(FindRepoRoot(), "data", "rates"));
+        var lookup = InMemoryRateLookup.FromDirectory(Path.Combine(FindRepoRoot(), "data", "rates", "HO-PRIMARY.NJ.PRIMARY.2026.02"));
         return (coverage, lookup);
     }
 

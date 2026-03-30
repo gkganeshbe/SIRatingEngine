@@ -1,7 +1,8 @@
 {
   "ProductCode": "HO-PRIMARY",
+  "RateState": "NJ",
   "CoverageCode": "PRIMARY",
-  "EffectiveDate": "2026-02-15",
+  "RateEffectiveDate": "2026-02-15",
   "Risk": {
     "Occupancy": "OWNER",
     "Zone": "Z1",

@@ -5,22 +5,25 @@ using RatingEngine.Core;
 namespace RatingEngine.Data;
 
 /// <summary>
-/// IRateLookup implementation backed by SQL Server.
-/// Rate table rows are loaded once per table per tenant and cached in IMemoryCache.
-/// Cache key format: rt:{tenantId}:{tableName}
+/// IRateLookup backed by SQL Server, scoped to one CoverageConfig row.
+/// All rate table lookups are filtered to RateTable.CoverageConfigId = _coverageConfigId,
+/// so table names only need to be unique within a coverage config.
+/// Cache key: rt:{tenantId}:{configId}:{tableName}
 /// </summary>
 public sealed class DbRateLookup : IRateLookup
 {
     private readonly DbConnectionFactory _db;
     private readonly IMemoryCache _cache;
     private readonly ITenantContext _tenant;
+    private readonly int _coverageConfigId;
     private static readonly TimeSpan CacheDuration = TimeSpan.FromMinutes(30);
 
-    public DbRateLookup(DbConnectionFactory db, IMemoryCache cache, ITenantContext tenant)
+    public DbRateLookup(DbConnectionFactory db, IMemoryCache cache, ITenantContext tenant, int coverageConfigId)
     {
         _db = db;
         _cache = cache;
         _tenant = tenant;
+        _coverageConfigId = coverageConfigId;
     }
 
     public decimal GetFactor(string rateTable, IReadOnlyDictionary<string, string> keys, DateOnly effDate)
@@ -119,7 +122,7 @@ public sealed class DbRateLookup : IRateLookup
 
     private List<RateRow> LoadRows(string tableName)
     {
-        var cacheKey = $"rt:{_tenant.TenantId}:{tableName}";
+        var cacheKey = $"rt:{_tenant.TenantId}:{_coverageConfigId}:{tableName}";
         return _cache.GetOrCreate(cacheKey, entry =>
         {
             entry.AbsoluteExpirationRelativeToNow = CacheDuration;
@@ -137,9 +140,37 @@ public sealed class DbRateLookup : IRateLookup
             FROM RateTableRow r
             INNER JOIN RateTable t ON t.Id = r.RateTableId
             WHERE t.Name = @Name
+              AND t.CoverageConfigId = @ConfigId
             """;
 
         using var conn = _db.Create();
-        return conn.Query<RateRow>(sql, new { Name = tableName }).AsList();
+        return conn.Query<RateRow>(sql, new { Name = tableName, ConfigId = _coverageConfigId }).AsList();
+    }
+}
+
+/// <summary>
+/// IRateLookupFactory backed by SQL Server.
+/// Scopes each IRateLookup to the resolved CoverageConfig.DbId.
+/// Must be registered as scoped (depends on scoped DbConnectionFactory and ITenantContext).
+/// </summary>
+public sealed class DbRateLookupFactory : IRateLookupFactory
+{
+    private readonly DbConnectionFactory _db;
+    private readonly IMemoryCache _cache;
+    private readonly ITenantContext _tenant;
+
+    public DbRateLookupFactory(DbConnectionFactory db, IMemoryCache cache, ITenantContext tenant)
+    {
+        _db = db;
+        _cache = cache;
+        _tenant = tenant;
+    }
+
+    public IRateLookup CreateForCoverage(CoverageConfig coverage)
+    {
+        if (!coverage.DbId.HasValue)
+            throw new InvalidOperationException(
+                $"CoverageConfig '{coverage.CoverageCode}' has no DbId — cannot create a DB-scoped rate lookup.");
+        return new DbRateLookup(_db, _cache, _tenant, coverage.DbId.Value);
     }
 }

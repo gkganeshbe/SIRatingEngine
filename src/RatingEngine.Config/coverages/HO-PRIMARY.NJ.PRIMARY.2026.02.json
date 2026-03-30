@@ -1,0 +1,109 @@
+{
+  "state": "NJ",
+  "productCode": "HO-PRIMARY",
+  "coverageCode": "PRIMARY",
+  "version": "2026.02",
+  "effectiveStart": "2026-02-01",
+  "perils": [
+    "FIRE",
+    "HURRICANE"
+  ],
+  "pipeline": [
+    {
+      "id": "S1",
+      "name": "Base Loss Costs",
+      "operation": "lookup",
+      "rateTable": "BaseLossCost",
+      "keys": {
+        "Peril": "$peril",
+        "OccupancyType": "$risk.Occupancy",
+        "Zone": "$risk.Zone"
+      },
+      "math": {
+        "type": "set"
+      }
+    },
+    {
+      "id": "S2",
+      "name": "Amount Of Insurance",
+      "operation": "lookup",
+      "rateTable": "AmountOfInsuranceFactor",
+      "keys": {
+        "Peril": "$peril",
+        "CoverageA": "$risk.CoverageA"
+      },
+      "math": {
+        "type": "add"
+      },
+      "interpolate": {
+        "key": "CoverageA"
+      }
+    },
+    {
+      "id": "ROUND_BASE",
+      "name": "Round Base Section",
+      "operation": "round",
+      "round": {
+        "precision": 2,
+        "mode": "AwayFromZero"
+      }
+    },
+    {
+      "id": "S4",
+      "name": "Loss Cost Multiplier",
+      "operation": "lookup",
+      "rateTable": "LCM",
+      "keys": {
+        "Jurisdiction": "$risk.State"
+      },
+      "math": {
+        "type": "mul"
+      }
+    },
+    {
+      "id": "ROUND_LCM",
+      "name": "Round After LCM",
+      "operation": "round",
+      "round": {
+        "precision": 2,
+        "mode": "AwayFromZero"
+      }
+    },
+    {
+      "id": "S6",
+      "name": "Peril Subzone",
+      "operation": "lookup",
+      "rateTable": "PerilSubzoneFactor",
+      "keys": {
+        "Peril": "$peril",
+        "Zip": "$risk.Zip",
+        "SubZone": "$risk.SubZone"
+      },
+      "math": {
+        "type": "mul"
+      }
+    },
+    {
+      "id": "S8",
+      "name": "Protection Class",
+      "operation": "lookup",
+      "rateTable": "ProtectionClassFactor",
+      "keys": {
+        "Peril": "$peril",
+        "ProtectionClass": "$risk.ProtectionClass"
+      },
+      "math": {
+        "type": "mul"
+      }
+    },
+    {
+      "id": "ROUND_FINAL",
+      "name": "Peril Premium Round",
+      "operation": "round",
+      "round": {
+        "precision": 2,
+        "mode": "AwayFromZero"
+      }
+    }
+  ]
+}

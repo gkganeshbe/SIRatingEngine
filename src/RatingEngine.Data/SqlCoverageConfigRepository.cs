@@ -8,12 +8,20 @@ public sealed class SqlCoverageConfigRepository : ICoverageConfigRepository
     private readonly DbConnectionFactory _db;
     public SqlCoverageConfigRepository(DbConnectionFactory db) => _db = db;
 
-    public async Task<CoverageConfig?> GetAsync(string productCode, string coverageCode, string version)
+    public async Task<CoverageConfig?> GetAsync(string productCode, string state, string coverageCode, DateOnly effectiveDate)
     {
+        // Exact state match takes priority over wildcard (*); within same specificity latest EffStart wins.
         const string configSql = """
-            SELECT Id, ProductCode, CoverageCode, Version, EffStart AS EffectiveStart
+            SELECT TOP 1 Id, ProductCode, State, CoverageCode, Version, EffStart AS EffectiveStart
             FROM CoverageConfig
-            WHERE ProductCode = @ProductCode AND CoverageCode = @CoverageCode AND Version = @Version
+            WHERE ProductCode    = @ProductCode
+              AND (State = @State OR State = '*')
+              AND CoverageCode   = @CoverageCode
+              AND EffStart      <= @EffectiveDate
+              AND (ExpireAt IS NULL OR ExpireAt > @EffectiveDate)
+            ORDER BY
+                CASE WHEN State = @State THEN 0 ELSE 1 END,
+                EffStart DESC
             """;
 
         const string perilSql = """
@@ -43,7 +51,7 @@ public sealed class SqlCoverageConfigRepository : ICoverageConfigRepository
         using var conn = _db.Create();
 
         var configRow = await conn.QueryFirstOrDefaultAsync<ConfigRow>(
-            configSql, new { ProductCode = productCode, CoverageCode = coverageCode, Version = version });
+            configSql, new { ProductCode = productCode, State = state, CoverageCode = coverageCode, EffectiveDate = effectiveDate });
 
         if (configRow is null) return null;
 
@@ -66,11 +74,15 @@ public sealed class SqlCoverageConfigRepository : ICoverageConfigRepository
 
         return new CoverageConfig(
             configRow.ProductCode,
+            configRow.State,
             configRow.CoverageCode,
             configRow.Version,
             configRow.EffectiveStart,
             perils,
-            pipeline);
+            pipeline)
+        {
+            DbId = configRow.Id
+        };
     }
 
     private static StepConfig BuildStepConfig(StepRow s, Dictionary<int, Dictionary<string, string>> keysByStep)
@@ -146,6 +158,7 @@ public sealed class SqlCoverageConfigRepository : ICoverageConfigRepository
     {
         public int Id { get; init; }
         public string ProductCode { get; init; } = string.Empty;
+        public string State { get; init; } = "*";
         public string CoverageCode { get; init; } = string.Empty;
         public string Version { get; init; } = string.Empty;
         public DateOnly EffectiveStart { get; init; }

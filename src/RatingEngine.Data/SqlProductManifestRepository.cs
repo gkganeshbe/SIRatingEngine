@@ -8,12 +8,15 @@ public sealed class SqlProductManifestRepository : IProductManifestRepository
     private readonly DbConnectionFactory _db;
     public SqlProductManifestRepository(DbConnectionFactory db) => _db = db;
 
-    public async Task<ProductManifest?> GetAsync(string productCode, string version)
+    public async Task<ProductManifest?> GetAsync(string productCode, DateOnly effectiveDate)
     {
         const string manifestSql = """
-            SELECT Id, ProductCode, Version, EffStart AS EffectiveStart
+            SELECT TOP 1 Id, ProductCode, Version, EffStart AS EffectiveStart
             FROM ProductManifest
-            WHERE ProductCode = @ProductCode AND Version = @Version
+            WHERE ProductCode = @ProductCode
+              AND EffStart <= @EffectiveDate
+              AND (ExpireAt IS NULL OR ExpireAt > @EffectiveDate)
+            ORDER BY EffStart DESC
             """;
 
         const string coverageSql = """
@@ -26,7 +29,7 @@ public sealed class SqlProductManifestRepository : IProductManifestRepository
         using var conn = _db.Create();
 
         var row = await conn.QueryFirstOrDefaultAsync<ManifestRow>(
-            manifestSql, new { ProductCode = productCode, Version = version });
+            manifestSql, new { ProductCode = productCode, EffectiveDate = effectiveDate });
 
         if (row is null) return null;
 

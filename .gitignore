@@ -1,3 +1,6 @@
+# ── Data Protection keys (machine-local, must not be committed) ───────────────
+.data-protection-keys/
+
 # ── Build outputs ─────────────────────────────────────────────────────────────
 bin/
 obj/
@@ -61,3 +64,9 @@ logs/
 *.tmp
 *.temp
 ~$*
+
+# ── Angular / Node ────────────────────────────────────────────────────────────
+admin-ui/node_modules/
+admin-ui/dist/
+admin-ui/.angular/
+admin-ui/.cache/

@@ -33,6 +33,23 @@ import { TenantService } from './core/services/tenant.service';
             <mat-icon matListItemIcon>inventory_2</mat-icon>
             <span matListItemTitle>Products</span>
           </a>
+          <a mat-list-item routerLink="/coverages" [queryParams]="{}" routerLinkActive="active-link"
+             [routerLinkActiveOptions]="{exact: false}">
+            <mat-icon matListItemIcon>map</mat-icon>
+            <span matListItemTitle>Coverage Mapping</span>
+          </a>
+          <a mat-list-item routerLink="/risk-fields" routerLinkActive="active-link">
+            <mat-icon matListItemIcon>tune</mat-icon>
+            <span matListItemTitle>Risk Field Mapping</span>
+          </a>
+          <a mat-list-item routerLink="/lookups" routerLinkActive="active-link">
+            <mat-icon matListItemIcon>list_alt</mat-icon>
+            <span matListItemTitle>Lookups &amp; Keys</span>
+          </a>
+          <a mat-list-item routerLink="/test-rating" routerLinkActive="active-link">
+            <mat-icon matListItemIcon>science</mat-icon>
+            <span matListItemTitle>Validation &amp; Testing</span>
+          </a>
         </mat-nav-list>
       </mat-sidenav>
 

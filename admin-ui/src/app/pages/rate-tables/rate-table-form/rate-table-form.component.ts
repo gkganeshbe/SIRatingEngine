@@ -1,5 +1,6 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ACTIVE_EXPIRE } from '../../../core/utils/date.utils';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -9,14 +10,14 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { RateTableService } from '../../../core/services/rate-table.service';
-import { RateTableSummary, LookupType, ColumnDefRequest } from '../../../core/models/api.models';
+import { RateTableSummary, LookupType, ValueType, ColumnDefRequest } from '../../../core/models/api.models';
 
 export interface RateTableFormData {
   coverageId: number;
   table: RateTableSummary | null;
 }
 
-const COLUMN_NAMES = ['Key1','Key2','Key3','Key4','Key5','RangeFrom','RangeTo','Factor','Additive','AdditionalUnit','AdditionalRate'];
+const COLUMN_NAMES = ['Key1','Key2','Key3','Key4','Key5','RangeFrom','RangeTo','Factor','AdditionalUnit','AdditionalRate'];
 const DATA_TYPES   = ['string','numeric','date'];
 
 @Component({
@@ -37,13 +38,26 @@ const DATA_TYPES   = ['string','numeric','date'];
             <input matInput formControlName="name" placeholder="e.g. CondoBaseRate">
           </mat-form-field>
           <mat-form-field>
-            <mat-label>Lookup Type</mat-label>
+            <mat-label>Matching Method</mat-label>
             <mat-select formControlName="lookupType">
-              <mat-option value="EXACT">EXACT – exact key match</mat-option>
-              <mat-option value="INTERPOLATE">INTERPOLATE – linear interpolation</mat-option>
-              <mat-option value="RANGE">RANGE – RangeFrom/RangeTo dimension</mat-option>
-              <mat-option value="WILDCARD">WILDCARD – single wildcard row</mat-option>
+              <mat-option value="EXACT">Exact Match</mat-option>
+              <mat-option value="INTERPOLATE">Linear Interpolation</mat-option>
+              <mat-option value="RANGE">Numeric Range (From / To)</mat-option>
+              <mat-option value="WILDCARD">Wildcard Fallback</mat-option>
             </mat-select>
+          </mat-form-field>
+        </div>
+
+        <div class="form-row">
+          <mat-form-field>
+            <mat-label>Value Type</mat-label>
+            <mat-select formControlName="valueType">
+              <mat-option value="Factor">Factor — multiply running premium</mat-option>
+              <mat-option value="Rate">Rate — set as base (e.g. per $100 TIV)</mat-option>
+              <mat-option value="FlatAmount">Flat Amount — add or subtract</mat-option>
+              <mat-option value="Multiplier">Multiplier — same as Factor, semantic label</mat-option>
+            </mat-select>
+            <mat-hint>Informs the default math operation when this table is used in a step</mat-hint>
           </mat-form-field>
         </div>
 
@@ -52,33 +66,40 @@ const DATA_TYPES   = ['string','numeric','date'];
           <input matInput formControlName="description">
         </mat-form-field>
 
+        <mat-form-field class="full-width">
+          <mat-label>Intended for Coverage (optional)</mat-label>
+          <input matInput formControlName="intendedCoverage"
+                 placeholder="e.g. Building Coverage, Earthquake">
+          <mat-hint>Documents which coverage(s) this table is designed for</mat-hint>
+        </mat-form-field>
+
         <div class="form-row">
           <mat-form-field>
-            <mat-label>Eff Start (YYYY-MM-DD)</mat-label>
+            <mat-label>Effective From (YYYY-MM-DD)</mat-label>
             <input matInput formControlName="effStart">
           </mat-form-field>
           <mat-form-field *ngIf="isEdit">
-            <mat-label>Expire At (optional)</mat-label>
+            <mat-label>Effective To (optional)</mat-label>
             <input matInput formControlName="expireAt">
           </mat-form-field>
           <mat-form-field *ngIf="form.value.lookupType === 'INTERPOLATE'">
-            <mat-label>Interpolation Key Column</mat-label>
+            <mat-label>Interpolation Column</mat-label>
             <mat-select formControlName="interpolationKeyCol">
-              <mat-option value="Key1">Key1</mat-option>
-              <mat-option value="Key2">Key2</mat-option>
-              <mat-option value="Key3">Key3</mat-option>
-              <mat-option value="Key4">Key4</mat-option>
-              <mat-option value="Key5">Key5</mat-option>
+              <mat-option *ngFor="let col of colDefs.controls; let i = index"
+                          [value]="getColName(i)">
+                {{getColLabel(i)}}
+              </mat-option>
             </mat-select>
+            <mat-hint>The numeric key column used for interpolation between breakpoints</mat-hint>
           </mat-form-field>
         </div>
 
         <!-- Column Defs (create only) -->
         <ng-container *ngIf="!isEdit">
           <div class="section-title" style="margin-top:8px">
-            Column Definitions
+            Key & Value Columns
             <span style="font-weight:300;font-size:11px;margin-left:8px">
-              (define at least Factor or Additive)
+              (at least one value column required)
             </span>
           </div>
           <div formArrayName="columnDefs">
@@ -127,6 +148,15 @@ export class RateTableFormComponent implements OnInit {
   columnNames = COLUMN_NAMES;
   dataTypes   = DATA_TYPES;
 
+  getColName(i: number): string {
+    return this.colDefs.at(i)?.get('columnName')?.value ?? '';
+  }
+  getColLabel(i: number): string {
+    const label = this.colDefs.at(i)?.get('displayLabel')?.value ?? '';
+    const name  = this.getColName(i);
+    return label || name;
+  }
+
   private fb         = inject(FormBuilder);
   private svc        = inject(RateTableService);
   readonly dialogRef = inject(MatDialogRef<RateTableFormComponent>);
@@ -139,9 +169,11 @@ export class RateTableFormComponent implements OnInit {
     this.form = this.fb.group({
       name:                [{ value: t?.name ?? '', disabled: this.isEdit }, Validators.required],
       lookupType:          [t?.lookupType          ?? 'EXACT', Validators.required],
+      valueType:           [t?.valueType           ?? 'Factor', Validators.required],
       description:         [t?.description         ?? ''],
+      intendedCoverage:    [t?.intendedCoverage     ?? ''],
       effStart:            [{ value: t?.effStart ?? '', disabled: this.isEdit }, this.isEdit ? [] : Validators.required],
-      expireAt:            [t?.expireAt            ?? ''],
+      expireAt:            [t?.expireAt            ?? ACTIVE_EXPIRE],
       interpolationKeyCol: [t?.interpolationKeyCol ?? ''],
       columnDefs: this.fb.array([]),
     });
@@ -174,10 +206,12 @@ export class RateTableFormComponent implements OnInit {
 
     if (this.isEdit) {
       this.svc.update(cid, this.data.table!.id, {
-        description:         v.description  || null,
-        lookupType:          v.lookupType   as LookupType,
+        description:         v.description        || null,
+        intendedCoverage:    v.intendedCoverage    || null,
+        lookupType:          v.lookupType          as LookupType,
+        valueType:           v.valueType           as ValueType,
         interpolationKeyCol: v.interpolationKeyCol || null,
-        expireAt:            v.expireAt     || null,
+        expireAt:            v.expireAt            || ACTIVE_EXPIRE,
       }).subscribe({
         next:  () => this.dialogRef.close(true),
         error: () => { this.saving = false; }
@@ -189,11 +223,13 @@ export class RateTableFormComponent implements OnInit {
       this.svc.create(cid, {
         coverageConfigId:    cid,
         name:                v.name,
-        description:         v.description  || null,
-        lookupType:          v.lookupType   as LookupType,
+        description:         v.description        || null,
+        intendedCoverage:    v.intendedCoverage    || null,
+        lookupType:          v.lookupType          as LookupType,
+        valueType:           v.valueType           as ValueType,
         interpolationKeyCol: v.interpolationKeyCol || null,
         effStart:            v.effStart,
-        expireAt:            v.expireAt     || null,
+        expireAt:            v.expireAt            || ACTIVE_EXPIRE,
         columnDefs:          colDefs,
       }).subscribe({
         next:  () => this.dialogRef.close(true),

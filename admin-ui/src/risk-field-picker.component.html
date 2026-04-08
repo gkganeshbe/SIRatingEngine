@@ -1,0 +1,15 @@
+<mat-form-field appearance="outline" class="full-width">
+  <mat-label>{{ label }}</mat-label>
+  <mat-select [value]="value" (selectionChange)="onSelectionChange($event.value)">
+    
+    <!-- Optional: Allow clearing the selection -->
+    <mat-option [value]="null"><em>-- None --</em></mat-option>
+
+    <mat-optgroup *ngFor="let group of groupedFields" [label]="group.category">
+      <mat-option *ngFor="let field of group.fields" [value]="field.path">
+        {{ field.displayName }}
+        <small style="color: rgba(0,0,0,0.4); margin-left: 8px;">{{ field.path }}</small>
+      </mat-option>
+    </mat-optgroup>
+  </mat-select>
+</mat-form-field>

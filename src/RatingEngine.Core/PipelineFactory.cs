@@ -33,10 +33,10 @@ public sealed class JsonPipelineFactory : IPipelineFactory
                         }
                         IRatingStep step = mathType switch
                         {
-                            "mul" => new LookupMultiplyStep  { Id = sc.Id, Name = sc.Name, RateTable = rt, KeySelector = keys, Predicate = when, InterpolateKey = interpKey, RangeKey = rangeKey },
-                            "add" => new LookupAddStep       { Id = sc.Id, Name = sc.Name, RateTable = rt, KeySelector = keys, Predicate = when, InterpolateKey = interpKey, RangeKey = rangeKey },
-                            "sub" => new LookupSubtractStep  { Id = sc.Id, Name = sc.Name, RateTable = rt, KeySelector = keys, Predicate = when, InterpolateKey = interpKey, RangeKey = rangeKey },
-                            "set" => new SetFromLookupStep   { Id = sc.Id, Name = sc.Name, RateTable = rt, KeySelector = keys, Predicate = when, InterpolateKey = interpKey, RangeKey = rangeKey },
+                            "mul" => new LookupMultiplyStep  { Id = sc.Id, Name = sc.Name, Category = sc.StepCategory, RateTable = rt, KeySelector = keys, Predicate = when, InterpolateKey = interpKey, RangeKey = rangeKey },
+                            "add" => new LookupAddStep       { Id = sc.Id, Name = sc.Name, Category = sc.StepCategory, RateTable = rt, KeySelector = keys, Predicate = when, InterpolateKey = interpKey, RangeKey = rangeKey },
+                            "sub" => new LookupSubtractStep  { Id = sc.Id, Name = sc.Name, Category = sc.StepCategory, RateTable = rt, KeySelector = keys, Predicate = when, InterpolateKey = interpKey, RangeKey = rangeKey },
+                            "set" => new SetFromLookupStep   { Id = sc.Id, Name = sc.Name, Category = sc.StepCategory, RateTable = rt, KeySelector = keys, Predicate = when, InterpolateKey = interpKey, RangeKey = rangeKey },
                             _ => throw new NotSupportedException($"Unsupported math type {sc.Math?.Type}")
                         };
                         list.Add(step);
@@ -45,11 +45,59 @@ public sealed class JsonPipelineFactory : IPipelineFactory
                 case "compute":
                     {
                         var cfg = sc.Compute ?? throw new InvalidOperationException($"Step {sc.Id} with operation=compute is missing a 'compute' config block");
-                        list.Add(new ComputeStep { Id = sc.Id, Name = sc.Name, Expr = cfg.Expr, StoreAs = cfg.StoreAs, ApplyToPremium = cfg.ApplyToPremium, Predicate = when });
+                        list.Add(new ComputeStep { Id = sc.Id, Name = sc.Name, Category = sc.StepCategory, Expr = cfg.Expr, StoreAs = cfg.StoreAs, ApplyToPremium = cfg.ApplyToPremium, Predicate = when });
+                        break;
+                    }
+                case "adjustment":
+                    {
+                        var mathType = sc.Math?.Type?.ToLowerInvariant() ?? "mul";
+                        var sourceType = sc.SourceType?.ToLowerInvariant() ?? (sc.RateTable is not null ? "ratetable" : "constant");
+
+                        if (sourceType == "ratetable" && sc.RateTable is not null)
+                        {
+                            // Rate-table source: reuse the same lookup steps — distinction is UI-only
+                            var rt = sc.RateTable;
+                            var keys = BuildKeySelector(sc.Keys ?? new());
+                            var interpKey = sc.Interpolate?.Key;
+                            (string Key, Func<RateContext, decimal> Resolver)? rangeKey = null;
+                            if (sc.RangeKey is not null)
+                            {
+                                var rkName = sc.RangeKey.Key;
+                                rangeKey = (rkName, ctx =>
+                                {
+                                    var raw = ResolvePath(ctx, $"$risk.{rkName}");
+                                    return decimal.TryParse(raw, System.Globalization.NumberStyles.Any,
+                                        System.Globalization.CultureInfo.InvariantCulture, out var v) ? v : 0m;
+                                });
+                            }
+                            IRatingStep lookupStep = mathType switch
+                            {
+                                "mul" => new LookupMultiplyStep  { Id = sc.Id, Name = sc.Name, Category = sc.StepCategory, RateTable = rt, KeySelector = keys, Predicate = when, InterpolateKey = interpKey, RangeKey = rangeKey },
+                                "add" => new LookupAddStep       { Id = sc.Id, Name = sc.Name, Category = sc.StepCategory, RateTable = rt, KeySelector = keys, Predicate = when, InterpolateKey = interpKey, RangeKey = rangeKey },
+                                "sub" => new LookupSubtractStep  { Id = sc.Id, Name = sc.Name, Category = sc.StepCategory, RateTable = rt, KeySelector = keys, Predicate = when, InterpolateKey = interpKey, RangeKey = rangeKey },
+                                "set" => new SetFromLookupStep   { Id = sc.Id, Name = sc.Name, Category = sc.StepCategory, RateTable = rt, KeySelector = keys, Predicate = when, InterpolateKey = interpKey, RangeKey = rangeKey },
+                                _ => throw new NotSupportedException($"Unsupported math type {sc.Math?.Type}")
+                            };
+                            list.Add(lookupStep);
+                        }
+                        else
+                        {
+                            // Constant or step-output source
+                            decimal constant = sc.ConstantValue ?? 1m;
+                            IRatingStep constStep = mathType switch
+                            {
+                                "mul" => new ConstantMultiplyStep  { Id = sc.Id, Name = sc.Name, Category = sc.StepCategory, Constant = constant, Predicate = when },
+                                "add" => new ConstantAddStep       { Id = sc.Id, Name = sc.Name, Category = sc.StepCategory, Constant = constant, Predicate = when },
+                                "sub" => new ConstantSubtractStep  { Id = sc.Id, Name = sc.Name, Category = sc.StepCategory, Constant = constant, Predicate = when },
+                                "set" => new ConstantSetStep       { Id = sc.Id, Name = sc.Name, Category = sc.StepCategory, Constant = constant, Predicate = when },
+                                _ => throw new NotSupportedException($"Unsupported math type {sc.Math?.Type}")
+                            };
+                            list.Add(constStep);
+                        }
                         break;
                     }
                 case "round":
-                    list.Add(new RoundStep { Id = sc.Id, Name = sc.Name, Precision = sc.Round?.Precision ?? 2, Mode = ParseMode(sc.Round?.Mode) });
+                    list.Add(new RoundStep { Id = sc.Id, Name = sc.Name, Category = sc.StepCategory, Precision = sc.Round?.Precision ?? 2, Mode = ParseMode(sc.Round?.Mode) });
                     break;
                 default:
                     throw new NotSupportedException($"Unsupported operation {sc.Operation}");
@@ -65,7 +113,24 @@ public sealed class JsonPipelineFactory : IPipelineFactory
 
     private static Func<RateContext, bool> BuildPredicate(WhenConfig? when)
     {
-        if (when is null || string.IsNullOrWhiteSpace(when.Path)) return _ => true;
+        if (when is null) return _ => true;
+
+        // ── compound AND (AllOf) ──────────────────────────────────────────────
+        if (when.AllOf is { Count: > 0 })
+        {
+            var preds = when.AllOf.Select(BuildPredicate).ToArray();
+            return ctx => preds.All(p => p(ctx));
+        }
+
+        // ── compound OR (AnyOf) ───────────────────────────────────────────────
+        if (when.AnyOf is { Count: > 0 })
+        {
+            var preds = when.AnyOf.Select(BuildPredicate).ToArray();
+            return ctx => preds.Any(p => p(ctx));
+        }
+
+        // ── single predicate ──────────────────────────────────────────────────
+        if (string.IsNullOrWhiteSpace(when.Path)) return _ => true;
 
         return ctx =>
         {
@@ -83,16 +148,16 @@ public sealed class JsonPipelineFactory : IPipelineFactory
 
             // ── numeric comparisons ───────────────────────────────────────────
             if (!string.IsNullOrWhiteSpace(when.GreaterThan))
-                return TryCompare(raw, when.GreaterThan, out var c) && c > 0;
+                return TryCompare(raw, when.GreaterThan, ctx, out var c) && c > 0;
 
             if (!string.IsNullOrWhiteSpace(when.LessThan))
-                return TryCompare(raw, when.LessThan, out var c) && c < 0;
+                return TryCompare(raw, when.LessThan, ctx, out var c) && c < 0;
 
             if (!string.IsNullOrWhiteSpace(when.GreaterThanOrEqual))
-                return TryCompare(raw, when.GreaterThanOrEqual, out var c) && c >= 0;
+                return TryCompare(raw, when.GreaterThanOrEqual, ctx, out var c) && c >= 0;
 
             if (!string.IsNullOrWhiteSpace(when.LessThanOrEqual))
-                return TryCompare(raw, when.LessThanOrEqual, out var c) && c <= 0;
+                return TryCompare(raw, when.LessThanOrEqual, ctx, out var c) && c <= 0;
 
             // ── set membership ────────────────────────────────────────────────
             if (!string.IsNullOrWhiteSpace(when.In))
@@ -111,10 +176,19 @@ public sealed class JsonPipelineFactory : IPipelineFactory
         };
     }
 
+    /// <summary>
+    /// Evaluates a WhenConfig against an existing RateContext.
+    /// Used by the rating endpoints to test AggregateConfig.When conditions
+    /// before deciding whether to run in aggregate mode.
+    /// </summary>
+    public static bool EvalWhen(WhenConfig when, RateContext ctx) => BuildPredicate(when)(ctx);
+
     // ── path resolution ───────────────────────────────────────────────────────
-    // Supports: $peril  |  $risk.<Key>  |  literal (returned as-is)
+    // Supports: $premium  |  $peril  |  $risk.<Key>  |  literal (returned as-is)
     internal static string ResolvePath(RateContext ctx, string path)
     {
+        if (path == "$premium") return ctx.Premium.ToString(CultureInfo.InvariantCulture);
+
         if (path == "$peril") return ctx.Peril;
 
         if (path.StartsWith("$risk.", StringComparison.OrdinalIgnoreCase))
@@ -135,11 +209,13 @@ public sealed class JsonPipelineFactory : IPipelineFactory
 
     // ── helpers ───────────────────────────────────────────────────────────────
 
-    private static bool TryCompare(string rawValue, string threshold, out int comparison)
+    // Threshold may be a literal decimal or a $risk.*/$ premium path — resolve it first.
+    private static bool TryCompare(string rawValue, string threshold, RateContext ctx, out int comparison)
     {
         comparison = 0;
-        if (!decimal.TryParse(rawValue,   NumberStyles.Any, CultureInfo.InvariantCulture, out var lhs)) return false;
-        if (!decimal.TryParse(threshold,  NumberStyles.Any, CultureInfo.InvariantCulture, out var rhs)) return false;
+        var resolvedThreshold = threshold.StartsWith('$') ? ResolvePath(ctx, threshold) : threshold;
+        if (!decimal.TryParse(rawValue,          NumberStyles.Any, CultureInfo.InvariantCulture, out var lhs)) return false;
+        if (!decimal.TryParse(resolvedThreshold, NumberStyles.Any, CultureInfo.InvariantCulture, out var rhs)) return false;
         comparison = lhs.CompareTo(rhs);
         return true;
     }
@@ -180,7 +256,7 @@ public sealed class FileProductManifestRepository : IProductManifestRepository
 
     public FileProductManifestRepository(string configDir) => _configDir = configDir;
 
-    public Task<ProductManifest?> GetAsync(string productCode, DateOnly effectiveDate)
+    public Task<ProductManifest?> GetAsync(string productCode, DateOnly effectiveDate, CancellationToken cancellationToken = default)
     {
         var productsDir = Path.Combine(_configDir, "products");
         var candidates = Directory.GetFiles(productsDir, $"{productCode}.*.json", SearchOption.AllDirectories);
@@ -206,7 +282,7 @@ public sealed class FileCoverageConfigRepository : ICoverageConfigRepository
 
     // File naming: {productCode}.{state}.{coverageCode}.{version}.json
     // State "*" in the file means the pipeline applies to all states (wildcard fallback).
-    public Task<CoverageConfig?> GetAsync(string productCode, string state, string coverageCode, DateOnly effectiveDate)
+    public Task<CoverageConfig?> GetAsync(string productCode, string state, string coverageCode, DateOnly effectiveDate, CancellationToken cancellationToken = default)
     {
         var coveragesDir = Path.Combine(_configDir, "coverages");
         var candidates = Directory.GetFiles(coveragesDir, $"{productCode}.*.{coverageCode}.*.json", SearchOption.AllDirectories);

@@ -4,7 +4,8 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
   ProductSummary, ProductDetail,
-  CreateProductRequest, UpdateProductRequest, ExpireRequest
+  CreateProductRequest, UpdateProductRequest, ExpireRequest,
+  AddLobRequest
 } from '../models/api.models';
 
 @Injectable({ providedIn: 'root' })
@@ -35,5 +36,13 @@ export class ProductService {
 
   delete(id: number): Observable<void> {
     return this.http.delete<void>(`${this.base}/${id}`);
+  }
+
+  addLob(manifestId: number, req: AddLobRequest): Observable<{ id: number }> {
+    return this.http.post<{ id: number }>(`${this.base}/${manifestId}/lobs`, req);
+  }
+
+  deleteLob(lobId: number): Observable<void> {
+    return this.http.delete<void>(`${environment.apiUrl}/admin/lobs/${lobId}`);
   }
 }

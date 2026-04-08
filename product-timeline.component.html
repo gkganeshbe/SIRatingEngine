@@ -1,0 +1,23 @@
+<div class="timeline-wrapper">
+  <div class="timeline-track"></div>
+  
+  <div class="timeline-nodes">
+    <div *ngFor="let v of sortedVersions" 
+         class="timeline-node-container" 
+         [class.selected]="v.id === selectedVersionId"
+         (click)="selectVersion(v)">
+      
+      <div class="timeline-node" [ngClass]="'node-' + (v.status | lowercase)">
+        <mat-icon *ngIf="v.status === 'Active'">check_circle</mat-icon>
+        <mat-icon *ngIf="v.status === 'Draft' || v.status === 'Future'">schedule</mat-icon>
+        <mat-icon *ngIf="v.status === 'Expired'">history</mat-icon>
+      </div>
+      
+      <div class="timeline-content">
+        <div class="timeline-version">{{ v.version }}</div>
+        <div class="timeline-date">{{ v.effStart | date:'mediumDate' }}</div>
+        <div class="timeline-status" [ngClass]="'text-' + (v.status | lowercase)">{{ v.status }}</div>
+      </div>
+    </div>
+  </div>
+</div>

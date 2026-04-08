@@ -1,0 +1,8 @@
+[
+  { "Key1": "FIRE",      "Key2": "100000", "Value": 15.0,                                       "EffStart": "2026-01-01" },
+  { "Key1": "FIRE",      "Key2": "200000", "Value": 22.5,                                       "EffStart": "2026-01-01" },
+  { "Key1": "FIRE",      "Key2": "300000", "Value": 30.0, "AdditionalRate": 1.5, "AdditionalUnit": 10000, "EffStart": "2026-01-01" },
+  { "Key1": "HURRICANE", "Key2": "100000", "Value": 20.0,                                       "EffStart": "2026-01-01" },
+  { "Key1": "HURRICANE", "Key2": "200000", "Value": 25.0,                                       "EffStart": "2026-01-01" },
+  { "Key1": "HURRICANE", "Key2": "300000", "Value": 30.0, "AdditionalRate": 1.5, "AdditionalUnit": 10000, "EffStart": "2026-01-01" }
+]

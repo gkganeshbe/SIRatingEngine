@@ -46,12 +46,20 @@ public interface IRatingStep
 {
     string Id { get; }
     string Name { get; }
+    string? Category { get; }
     bool ShouldExecute(RateContext ctx);
     RateResult Execute(RateContext ctx, IRateLookup lookup);
 }
 
+/// <summary>
+/// Represents the result of a single pipeline step.
+/// </summary>
 public record RateResult(decimal NewPremium, RatingTrace Trace);
 
+/// <summary>
+/// Detailed audit trail for a rating step. 
+/// Enhanced with Metadata to support UI "Explain this Math" features.
+/// </summary>
 public record RatingTrace(
     string StepId,
     string StepName,
@@ -60,8 +68,17 @@ public record RatingTrace(
     decimal? Factor,
     decimal Before,
     decimal After,
-    string? Note
-);
+    string? Note,
+    string? Category = null)
+{
+    /// <summary>
+    /// The raw values retrieved from the risk bag or external lookups used in this step.
+    /// Key: The logical name (e.g. "Amount of Insurance"), Value: The actual value used (e.g. "250000").
+    /// This allows the UI to show exactly what data drove the calculation.
+    /// </summary>
+    public Dictionary<string, string> Metadata { get; init; } = new();
+    public string? Formula { get; init; }
+}
 
 public interface IRateLookup
 {
@@ -82,7 +99,7 @@ public interface IPipelineFactory
 public interface IProductManifestRepository
 {
     /// <summary>Returns the latest active manifest for <paramref name="productCode"/> whose EffectiveStart ≤ <paramref name="effectiveDate"/>.</summary>
-    Task<ProductManifest?> GetAsync(string productCode, DateOnly effectiveDate);
+    Task<ProductManifest?> GetAsync(string productCode, DateOnly effectiveDate, CancellationToken cancellationToken = default);
 }
 
 public interface ICoverageConfigRepository
@@ -91,7 +108,7 @@ public interface ICoverageConfigRepository
     /// Returns the latest active coverage config for the given product/state/coverage whose
     /// EffectiveStart ≤ <paramref name="effectiveDate"/>. Exact state match takes priority over wildcard (*).
     /// </summary>
-    Task<CoverageConfig?> GetAsync(string productCode, string state, string coverageCode, DateOnly effectiveDate);
+    Task<CoverageConfig?> GetAsync(string productCode, string state, string coverageCode, DateOnly effectiveDate, CancellationToken cancellationToken = default);
 }
 
 public interface IRateLookupFactory
@@ -100,13 +117,80 @@ public interface IRateLookupFactory
     IRateLookup CreateForCoverage(CoverageConfig coverage);
 }
 
-public record ProductManifest(string ProductCode, string Version, DateOnly EffectiveStart, IReadOnlyList<CoverageRef> Coverages);
-public record CoverageRef(string CoverageCode, string Version);
+public record ProductManifest(string ProductCode, string Version, DateOnly EffectiveStart, IReadOnlyList<CoverageRef> Coverages)
+{
+    /// <summary>LOB-grouped coverages for commercial products. Empty for personal lines products.</summary>
+    public IReadOnlyList<LobRef> Lobs { get; init; } = Array.Empty<LobRef>();
+
+    /// <summary>
+    /// All coverage codes across all LOBs (commercial) or the flat Coverages list (personal lines).
+    /// Use this when validating coverage membership without caring about LOB structure.
+    /// </summary>
+    public IReadOnlyList<CoverageRef> AllCoverages =>
+        Lobs.Count > 0 ? Lobs.SelectMany(l => l.Coverages).ToList() : Coverages;
+
+    /// <summary>
+    /// Policy-level adjustments run after all coverages are rated.
+    /// Typical uses: multi-LOB credit factors, LOB minimum premiums, cross-coverage surcharges.
+    /// Each adjustment receives a pre-populated risk bag with PolicyTotal, LobCount,
+    /// cov_{code}_Premium, lob_{code}_Premium, ScopedTotal, and any values published
+    /// by coverage pipelines via their Publish lists.
+    /// The adjustment pipeline starts with $premium = ScopedTotal and produces an adjusted total;
+    /// adjustmentAmount = adjustedTotal - scopedTotal (negative = credit, positive = surcharge).
+    /// </summary>
+    public IReadOnlyList<PolicyAdjustmentConfig> PolicyAdjustments { get; init; } = Array.Empty<PolicyAdjustmentConfig>();
+}
+
+/// <summary>
+/// Configures a single policy-level adjustment step applied after all coverages are rated.
+/// </summary>
+public record PolicyAdjustmentConfig
+{
+    public required string Id { get; init; }
+    public string Name { get; init; } = string.Empty;
+    /// <summary>
+    /// Coverage codes whose premiums are summed to produce $risk.ScopedTotal.
+    /// Empty list means all coverages ($risk.ScopedTotal == $risk.PolicyTotal).
+    /// </summary>
+    public IReadOnlyList<string> AppliesTo { get; init; } = Array.Empty<string>();
+    /// <summary>
+    /// Coverage code whose rate lookup tables are available to this adjustment pipeline.
+    /// When null, only compute/round steps are supported (no rate table lookups).
+    /// </summary>
+    public string? RateLookupCoverage { get; init; }
+    public required IReadOnlyList<StepConfig> Pipeline { get; init; }
+}
+
+public record CoverageRef(string CoverageCode);
+
+/// <summary>Groups coverages under a Line of Business within a commercial product manifest.</summary>
+public record LobRef(string LobCode, IReadOnlyList<CoverageRef> Coverages);
 
 public record CoverageConfig(string ProductCode, string State, string CoverageCode, string Version, DateOnly EffectiveStart, IReadOnlyList<string> Perils, IReadOnlyList<StepConfig> Pipeline)
 {
     /// <summary>Database primary key — populated by SQL repositories; null for file-based configs.</summary>
     public int? DbId { get; init; }
+    /// <summary>FK to CoverageRef — populated by SQL repositories; null for file-based configs.</summary>
+    public int? CoverageRefId { get; init; }
+    /// <summary>
+    /// Coverage codes that must be rated before this one. After each dependency is rated its final
+    /// premium is injected into this coverage's risk bag as $risk.cov_{code}_Premium, and any keys
+    /// the dependency listed in its Publish property are also available via $risk.{key}.
+    /// </summary>
+    public IReadOnlyList<string> DependsOn { get; init; } = Array.Empty<string>();
+    /// <summary>
+    /// Risk bag keys to export after this coverage is rated so that downstream coverages
+    /// (listed in their own DependsOn) can read them via $risk.{key}.
+    /// Typical use: snapshot an intermediate premium after a base-rate step.
+    /// </summary>
+    public IReadOnlyList<string> Publish { get; init; } = Array.Empty<string>();
+    /// <summary>
+    /// When set, the engine switches to aggregate mode for this coverage whenever
+    /// the AggregateConfig.When condition is true. All standard (non-SCHEDLEVEL)
+    /// risks are collapsed into one merged context with the specified fields summed/
+    /// averaged, and the pipeline runs once producing a single coverage premium.
+    /// </summary>
+    public AggregateConfig? Aggregate { get; init; }
 }
 
 // ── Segment / coverage input models ────────────────────────────────────────────
@@ -163,13 +247,43 @@ public record CoverageLevelInput(
     public IReadOnlyList<IReadOnlyDictionary<string, string>>? Schedules { get; init; }
 };
 
+// ── Commercial multi-LOB input models ────────────────────────────────────────
+
+/// <summary>
+/// A rated risk unit (building, location, or policy-level) in a commercial submission.
+/// RiskLevel signals the hierarchy tier: "BUILDING", "LOCATION", or "POLICY".
+/// LocationId optionally links a building risk to its parent location.
+/// Each risk declares exactly which coverages apply to it — so a building that does not
+/// carry BPP simply omits it from its Coverages list.
+/// </summary>
+public record CommercialRiskInput(
+    string RiskId,
+    string RiskLevel,
+    IReadOnlyDictionary<string, string> Attributes,
+    IReadOnlyList<CoverageInput> Coverages
+)
+{
+    public string? LocationId { get; init; }
+}
+
+/// <summary>
+/// A Line of Business within a commercial policy.
+/// LobRisk holds attributes shared by every risk in this LOB (e.g. OccupancyType for PROP).
+/// The merge chain is: PolicyRisk → LobRisk → Risk.Attributes → CoverageParams → ScheduleFields.
+/// </summary>
+public record LobInput(
+    string LobCode,
+    IReadOnlyDictionary<string, string> LobRisk,
+    IReadOnlyList<CommercialRiskInput> Risks
+);
+
 // ── Pipeline step configuration ─────────────────────────────────────────────
 
 public record StepConfig
 {
     public required string Id { get; init; }
     public string Name { get; init; } = string.Empty;
-    public required string Operation { get; init; } // lookup | compute | round
+    public required string Operation { get; init; } // lookup | compute | adjustment | round
     public string? RateTable { get; init; }
     public Dictionary<string,string>? Keys { get; init; }
     public MathConfig? Math { get; init; }
@@ -182,6 +296,28 @@ public record StepConfig
     /// Use this for range-based lookups such as deductible schedules keyed on building limit.
     /// </summary>
     public RangeKeyConfig? RangeKey { get; init; }
+    /// <summary>
+    /// For adjustment steps: 'rateTable' | 'constant' | 'stepOutput'.
+    /// When null, falls back to 'rateTable' if RateTable is set.
+    /// </summary>
+    public string? SourceType { get; init; }
+    /// <summary>Used when SourceType = 'constant'. The fixed value applied by the math operation.</summary>
+    public decimal? ConstantValue { get; init; }
+    /// <summary>
+    /// Optional name under which the step's result is stored in the risk bag.
+    /// When set, the result is accessible as $risk.{OutputAlias} in downstream steps.
+    /// </summary>
+    public string? OutputAlias { get; init; }
+    /// <summary>
+    /// Controls what portion of the rating context the step operates on.
+    /// 'policy' | 'coverage' | 'peril' — null means use the engine default.
+    /// </summary>
+    public string? OperationScope { get; init; }
+    /// <summary>
+    /// UI Hint to categorize steps (e.g., 'BaseRate', 'Modification', 'Tax', 'Rounding').
+    /// Allows the Admin UI to color-code or group steps in the pipeline view.
+    /// </summary>
+    public string? StepCategory { get; init; }
 }
 
 public record InterpolateConfig
@@ -203,7 +339,6 @@ public record MathConfig
 {
     public required string Type { get; init; } // set | add | sub | mul | noop
     public string Target { get; init; } = "premium";
-    public string Source { get; init; } = "Factor"; // Factor or Additive
 }
 
 /// <summary>
@@ -231,8 +366,11 @@ public record ComputeConfig
 
 /// <summary>
 /// Conditional guard evaluated before a pipeline step executes.
-/// Path resolves a $risk.&lt;Key&gt; or $peril value.
-/// Exactly one condition operator should be set.
+/// Supports three modes:
+///   • Single predicate: set Path + one operator property (e.g. EqualsTo).
+///   • AllOf: all sub-conditions must be true (AND composition).
+///   • AnyOf: at least one sub-condition must be true (OR composition).
+/// AnyOf[AllOf[...], AllOf[...]] expresses full DNF (OR of AND groups).
 /// </summary>
 public record WhenConfig
 {
@@ -257,6 +395,41 @@ public record WhenConfig
     public string? In { get; init; }
     /// <summary>Comma-separated list of rejected values (case-insensitive).</summary>
     public string? NotIn { get; init; }
+
+    // ── compound composition ─────────────────────────────────────────────────
+    /// <summary>All sub-conditions must be true (AND). Overrides single-predicate fields.</summary>
+    public IReadOnlyList<WhenConfig>? AllOf { get; init; }
+    /// <summary>At least one sub-condition must be true (OR). Overrides single-predicate fields.</summary>
+    public IReadOnlyList<WhenConfig>? AnyOf { get; init; }
+}
+
+// ── Aggregate rating configuration ───────────────────────────────────────────
+
+/// <summary>
+/// Defines one field to aggregate across all standard (non-SCHEDLEVEL) risks
+/// in the LOB before running the pipeline in aggregate mode.
+/// The result is injected into the merged risk bag as $risk.{ResultKey}.
+/// </summary>
+public record AggregateFieldConfig
+{
+    /// <summary>Risk attribute name to aggregate, or "*" for COUNT.</summary>
+    public required string SourceField { get; init; }
+    /// <summary>Aggregation function: SUM | AVG | MAX | MIN | COUNT</summary>
+    public string Function { get; init; } = "SUM";
+    /// <summary>Key injected into the aggregate risk bag as $risk.{ResultKey}.</summary>
+    public required string ResultKey { get; init; }
+}
+
+/// <summary>
+/// When the When condition evaluates to true at rating time the engine switches
+/// to aggregate mode for this coverage: all standard risks are merged into one
+/// context (with fields aggregated per Fields), and the pipeline runs once.
+/// SCHEDLEVEL risks are always rated individually regardless of this setting.
+/// </summary>
+public record AggregateConfig
+{
+    public required WhenConfig When { get; init; }
+    public required IReadOnlyList<AggregateFieldConfig> Fields { get; init; }
 }
 
 public record RoundConfig

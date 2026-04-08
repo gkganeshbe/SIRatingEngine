@@ -8,20 +8,24 @@ public sealed class SqlCoverageConfigRepository : ICoverageConfigRepository
     private readonly DbConnectionFactory _db;
     public SqlCoverageConfigRepository(DbConnectionFactory db) => _db = db;
 
-    public async Task<CoverageConfig?> GetAsync(string productCode, string state, string coverageCode, DateOnly effectiveDate)
+    public async Task<CoverageConfig?> GetAsync(string productCode, string state, string coverageCode, DateOnly effectiveDate, CancellationToken cancellationToken = default)
     {
         // Exact state match takes priority over wildcard (*); within same specificity latest EffStart wins.
         const string configSql = """
-            SELECT TOP 1 Id, ProductCode, State, CoverageCode, Version, EffStart AS EffectiveStart
-            FROM CoverageConfig
-            WHERE ProductCode    = @ProductCode
-              AND (State = @State OR State = '*')
-              AND CoverageCode   = @CoverageCode
-              AND EffStart      <= @EffectiveDate
-              AND (ExpireAt IS NULL OR ExpireAt > @EffectiveDate)
+            SELECT TOP 1
+                cc.Id, pm.ProductCode, cc.State, cr.CoverageCode, cc.Version,
+                cr.Id AS CoverageRefId, cc.EffStart AS EffectiveStart
+            FROM CoverageConfig cc
+            JOIN CoverageRef cr     ON cr.Id  = cc.CoverageRefId
+            JOIN ProductManifest pm ON pm.Id  = cr.ProductManifestId
+            WHERE pm.ProductCode  = @ProductCode
+              AND cr.CoverageCode = @CoverageCode
+              AND (cc.State = @State OR cc.State = '*')
+              AND cc.EffStart    <= @EffectiveDate
+              AND (cc.ExpireAt IS NULL OR cc.ExpireAt > @EffectiveDate)
             ORDER BY
-                CASE WHEN State = @State THEN 0 ELSE 1 END,
-                EffStart DESC
+                CASE WHEN cc.State = @State THEN 0 ELSE 1 END,
+                cc.EffStart DESC
             """;
 
         const string perilSql = """
@@ -34,6 +38,7 @@ public sealed class SqlCoverageConfigRepository : ICoverageConfigRepository
         const string stepSql = """
             SELECT Id, StepOrder, StepId, Name, Operation,
                    RateTableName, MathType, InterpolateKey, RangeKeyName,
+                   SourceType, ConstantValue, OutputAlias, OperationScope,
                    ComputeExpr, ComputeStoreAs, ComputeApplyToPremium,
                    RoundPrecision, RoundMode,
                    WhenPath, WhenOperator, WhenValue
@@ -50,20 +55,31 @@ public sealed class SqlCoverageConfigRepository : ICoverageConfigRepository
 
         using var conn = _db.Create();
 
-        var configRow = await conn.QueryFirstOrDefaultAsync<ConfigRow>(
-            configSql, new { ProductCode = productCode, State = state, CoverageCode = coverageCode, EffectiveDate = effectiveDate });
+        var configRow = await conn.QueryFirstOrDefaultAsync<ConfigRow>(new CommandDefinition(
+            configSql,
+            new { ProductCode = productCode, State = state, CoverageCode = coverageCode, EffectiveDate = effectiveDate },
+            cancellationToken: cancellationToken));
 
         if (configRow is null) return null;
 
-        var perils = (await conn.QueryAsync<string>(perilSql, new { ConfigId = configRow.Id })).AsList();
+        var perils = (await conn.QueryAsync<string>(new CommandDefinition(
+            perilSql,
+            new { ConfigId = configRow.Id },
+            cancellationToken: cancellationToken))).AsList();
 
-        var stepRows = (await conn.QueryAsync<StepRow>(stepSql, new { ConfigId = configRow.Id })).AsList();
+        var stepRows = (await conn.QueryAsync<StepRow>(new CommandDefinition(
+            stepSql,
+            new { ConfigId = configRow.Id },
+            cancellationToken: cancellationToken))).AsList();
 
         List<StepKeyRow> keyRows = [];
         if (stepRows.Count > 0)
         {
             var stepIds = stepRows.Select(s => s.Id).ToArray();
-            keyRows = (await conn.QueryAsync<StepKeyRow>(stepKeySql, new { StepIds = stepIds })).AsList();
+            keyRows = (await conn.QueryAsync<StepKeyRow>(new CommandDefinition(
+                stepKeySql,
+                new { StepIds = stepIds },
+                cancellationToken: cancellationToken))).AsList();
         }
 
         var keysByStep = keyRows
@@ -81,7 +97,8 @@ public sealed class SqlCoverageConfigRepository : ICoverageConfigRepository
             perils,
             pipeline)
         {
-            DbId = configRow.Id
+            DbId = configRow.Id,
+            CoverageRefId = configRow.CoverageRefId
         };
     }
 
@@ -118,23 +135,27 @@ public sealed class SqlCoverageConfigRepository : ICoverageConfigRepository
             ? new RangeKeyConfig { Key = s.RangeKeyName }
             : null;
 
-        WhenConfig? when = s.WhenPath is not null && s.WhenOperator is not null
+        WhenConfig? when = !string.IsNullOrEmpty(s.WhenPath) && !string.IsNullOrEmpty(s.WhenOperator)
             ? BuildWhen(s.WhenPath, s.WhenOperator, s.WhenValue)
             : null;
 
         return new StepConfig
         {
-            Id = s.StepId,
-            Name = s.Name,
-            Operation = s.Operation,
-            RateTable = s.RateTableName,
-            Keys = keys,
-            Math = math,
-            Compute = compute,
-            Round = round,
-            Interpolate = interpolate,
-            RangeKey = rangeKey,
-            When = when
+            Id            = s.StepId,
+            Name          = s.Name,
+            Operation     = s.Operation,
+            RateTable     = s.RateTableName,
+            Keys          = keys,
+            Math          = math,
+            Compute       = compute,
+            Round         = round,
+            Interpolate   = interpolate,
+            RangeKey      = rangeKey,
+            SourceType    = s.SourceType,
+            ConstantValue = s.ConstantValue,
+            OutputAlias   = s.OutputAlias,
+            OperationScope = s.OperationScope,
+            When          = when
         };
     }
 
@@ -157,6 +178,7 @@ public sealed class SqlCoverageConfigRepository : ICoverageConfigRepository
     private sealed class ConfigRow
     {
         public int Id { get; init; }
+        public int CoverageRefId { get; init; }
         public string ProductCode { get; init; } = string.Empty;
         public string State { get; init; } = "*";
         public string CoverageCode { get; init; } = string.Empty;
@@ -175,6 +197,10 @@ public sealed class SqlCoverageConfigRepository : ICoverageConfigRepository
         public string? MathType { get; init; }
         public string? InterpolateKey { get; init; }
         public string? RangeKeyName { get; init; }
+        public string? SourceType { get; init; }
+        public decimal? ConstantValue { get; init; }
+        public string? OutputAlias { get; init; }
+        public string? OperationScope { get; init; }
         public string? ComputeExpr { get; init; }
         public string? ComputeStoreAs { get; init; }
         public bool? ComputeApplyToPremium { get; init; }

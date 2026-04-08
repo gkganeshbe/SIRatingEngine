@@ -1,0 +1,17 @@
+[
+  {
+    "Key1": "REPLCMNTCOST",
+    "Value": 1,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "GUARREPLCMTCOST",
+    "Value": 1,
+    "EffStart": "2026-02-01"
+  },
+  {
+    "Key1": "REPLCMNTWITHGRC",
+    "Value": 1.05,
+    "EffStart": "2026-02-01"
+  }
+]

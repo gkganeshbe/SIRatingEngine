@@ -41,7 +41,7 @@ public sealed class DbRateLookup : IRateLookup
             throw new KeyNotFoundException(
                 $"No rate row in {rateTable} for keys: {string.Join(",", keys.Select(k => $"{k.Key}={k.Value}"))}");
 
-        return match.Factor ?? match.Additive ?? 0m;
+        return match.Factor;
     }
 
     public decimal GetRangeKeyFactor(string rateTable, IReadOnlyDictionary<string, string> keys, string rangeKey, decimal rangeValue, DateOnly effDate)
@@ -62,7 +62,7 @@ public sealed class DbRateLookup : IRateLookup
             throw new KeyNotFoundException(
                 $"No rate row in {rateTable} for keys: {string.Join(",", keys.Select(k => $"{k.Key}={k.Value}"))} rangeKey={rangeKey}={rangeValue}");
 
-        return match.Factor ?? match.Additive ?? 0m;
+        return match.Factor;
     }
 
     public decimal GetInterpolatedFactor(string rateTable, IReadOnlyDictionary<string, string> keys, string interpolationKey, DateOnly effDate)
@@ -89,7 +89,7 @@ public sealed class DbRateLookup : IRateLookup
                 var bpStr = r.GetKeyByIndex(interpIdx);
                 var ok = decimal.TryParse(bpStr, System.Globalization.NumberStyles.Any,
                     System.Globalization.CultureInfo.InvariantCulture, out var bp);
-                return (ok, bp, factor: r.Factor ?? r.Additive ?? 0m, r.AdditionalRate, r.AdditionalUnit);
+                return (ok, bp, factor: r.Factor, r.AdditionalRate, r.AdditionalUnit);
             })
             .Where(x => x.ok)
             .GroupBy(x => x.bp)
@@ -135,7 +135,7 @@ public sealed class DbRateLookup : IRateLookup
         const string sql = """
             SELECT r.Key1, r.Key2, r.Key3, r.Key4, r.Key5,
                    r.RangeFrom, r.RangeTo,
-                   r.Factor, r.Additive, r.AdditionalUnit, r.AdditionalRate,
+                   r.Factor, r.AdditionalUnit, r.AdditionalRate,
                    r.EffStart, r.ExpireAt AS EffEnd
             FROM RateTableRow r
             INNER JOIN RateTable t ON t.Id = r.RateTableId

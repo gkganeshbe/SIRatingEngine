@@ -1,0 +1,30 @@
+{
+  "productCode": "BOP",
+  "version": "2026.02",
+  "effectiveStart": "2026-02-01",
+  "coverages": [],
+  "lobs": [
+    {
+      "lobCode": "PROP",
+      "coverages": [
+        { "coverageCode": "BLDG",   "version": "2026.02" },
+        { "coverageCode": "BPP",    "version": "2026.02" },
+        { "coverageCode": "IM",     "version": "2026.02" }
+      ]
+    },
+    {
+      "lobCode": "GL",
+      "coverages": [
+        { "coverageCode": "GL-OCC", "version": "2026.02" },
+        { "coverageCode": "GL-AGG", "version": "2026.02" }
+      ]
+    },
+    {
+      "lobCode": "LIQLIAB",
+      "coverages": [
+        { "coverageCode": "LL-OCC", "version": "2026.02" },
+        { "coverageCode": "LL-AGG", "version": "2026.02" }
+      ]
+    }
+  ]
+}

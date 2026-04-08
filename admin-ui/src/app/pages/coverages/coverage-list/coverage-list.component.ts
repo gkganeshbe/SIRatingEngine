@@ -1,7 +1,7 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -15,6 +15,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { CoverageService } from '../../../core/services/coverage.service';
 import { CoverageSummary } from '../../../core/models/api.models';
+import { isExpired } from '../../../core/utils/date.utils';
 import { CoverageFormComponent } from '../coverage-form/coverage-form.component';
 import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-dialog.component';
 
@@ -30,7 +31,10 @@ import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-d
   template: `
     <div class="page-container">
       <div class="action-bar">
-        <h2 style="margin:0;flex:1">Coverage Configurations</h2>
+        <div style="flex:1">
+          <h2 style="margin:0">{{pageTitle}}</h2>
+          <p *ngIf="contextHint" style="margin:2px 0 0;font-size:13px;color:#666">{{contextHint}}</p>
+        </div>
         <mat-form-field style="width:220px" subscriptSizing="dynamic">
           <mat-label>Filter by product</mat-label>
           <input matInput [(ngModel)]="productFilter" (ngModelChange)="load()" placeholder="e.g. CONDO-IL">
@@ -82,8 +86,8 @@ import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-d
             <ng-container matColumnDef="expireAt">
               <th mat-header-cell *matHeaderCellDef>Expires</th>
               <td mat-cell *matCellDef="let c">
-                <mat-chip *ngIf="c.expireAt" color="warn" highlighted>{{c.expireAt}}</mat-chip>
-                <span *ngIf="!c.expireAt" style="color:rgba(0,0,0,.38)">—</span>
+                <mat-chip *ngIf="isExpired(c.expireAt)" color="warn" highlighted>{{c.expireAt}}</mat-chip>
+                <span *ngIf="!isExpired(c.expireAt)" style="color:rgba(0,0,0,.38)">—</span>
               </td>
             </ng-container>
 
@@ -98,7 +102,7 @@ import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-d
                   <mat-icon>edit</mat-icon>
                 </button>
                 <button mat-icon-button matTooltip="Expire" (click)="expire(c)"
-                        [disabled]="!!c.expireAt">
+                        [disabled]="isExpired(c.expireAt)">
                   <mat-icon>event_busy</mat-icon>
                 </button>
                 <button mat-icon-button matTooltip="Delete" color="warn" (click)="delete(c)">
@@ -109,7 +113,7 @@ import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-d
 
             <tr mat-header-row *matHeaderRowDef="columns"></tr>
             <tr mat-row *matRowDef="let row; columns: columns;"
-                [class.expired-row]="row.expireAt"
+                [class.expired-row]="isExpired(row.expireAt)"
                 style="cursor:pointer" (click)="openDetail(row)"></tr>
           </table>
         </mat-card-content>
@@ -118,33 +122,55 @@ import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-d
   `
 })
 export class CoverageListComponent implements OnInit {
+  readonly isExpired = isExpired;
   columns = ['productCode', 'state', 'coverageCode', 'version', 'effStart', 'expireAt', 'actions'];
   coverages: CoverageSummary[] = [];
   loading = true;
   error = '';
   productFilter = '';
 
+  /** Driven by ?view= query param: 'steps' | 'tables' | undefined */
+  view: 'steps' | 'tables' | null = null;
+
+  get pageTitle(): string {
+    if (this.view === 'steps')  return 'Rating Steps';
+    if (this.view === 'tables') return 'Rate Tables';
+    return 'Coverage Configurations';
+  }
+
+  get contextHint(): string {
+    if (this.view === 'steps')  return 'Select a coverage to view and configure its rating pipeline steps.';
+    if (this.view === 'tables') return 'Select a coverage to view and manage its rate tables.';
+    return '';
+  }
+
   constructor(
     private svc: CoverageService,
     private dialog: MatDialog,
     private router: Router,
+    private route: ActivatedRoute,
     private cdr: ChangeDetectorRef
   ) {}
 
-  ngOnInit() { this.load(); }
+  ngOnInit() {
+    const v = this.route.snapshot.queryParamMap.get('view');
+    this.view = v === 'steps' ? 'steps' : v === 'tables' ? 'tables' : null;
+    this.load();
+  }
 
   load() {
     this.loading = true;
     this.error = '';
-    this.svc.list(this.productFilter || undefined).subscribe({
+    this.svc.listAll(this.productFilter || undefined).subscribe({
       next:  d  => { this.coverages = d; this.loading = false; this.cdr.detectChanges(); },
       error: (e) => { this.loading = false; this.error = e?.message ?? 'Failed to load coverages'; this.cdr.detectChanges(); }
     });
   }
 
   openDetail(c: CoverageSummary) {
+    const tab = this.view === 'tables' ? 1 : 0;
     this.router.navigate(['/coverages', c.id], {
-      queryParams: { pc: c.productCode, cc: c.coverageCode, v: c.version }
+      queryParams: { pc: c.productCode, cc: c.coverageCode, v: c.version, tab }
     });
   }
 

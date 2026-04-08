@@ -295,8 +295,8 @@ public class PipelineTests
     {
         var json = """
             [
-              { "Key1": "NJ", "Factor": 2.0, "EffStart": "2020-01-01" },
-              { "Key1": "*",  "Factor": 1.5, "EffStart": "2020-01-01" }
+              { "Key1": "NJ", "Value": 2.0, "EffStart": "2020-01-01" },
+              { "Key1": "*",  "Value": 1.5, "EffStart": "2020-01-01" }
             ]
             """;
         var dir = Path.Combine(Path.GetTempPath(), $"rate-test-{Guid.NewGuid():N}");
@@ -306,6 +306,133 @@ public class PipelineTests
         var lookup = InMemoryRateLookup.FromDirectory(dir);
         Directory.Delete(dir, recursive: true);
         return lookup;
+    }
+
+    // ── Commercial multi-LOB models ──────────────────────────────────────────
+
+    [Fact]
+    public void ProductManifest_AllCoverages_ReturnsFlat_ForPersonalLines()
+    {
+        var manifest = new ProductManifest("HO-PRIMARY", "2026.02", new DateOnly(2026, 2, 1),
+            new[] { new CoverageRef("PRIMARY") });
+
+        Assert.Single(manifest.AllCoverages);
+        Assert.Equal("PRIMARY", manifest.AllCoverages[0].CoverageCode);
+        Assert.Empty(manifest.Lobs);
+    }
+
+    [Fact]
+    public void ProductManifest_AllCoverages_FlattensLobs_ForCommercial()
+    {
+        var manifest = new ProductManifest("BOP", "2026.02", new DateOnly(2026, 2, 1), Array.Empty<CoverageRef>())
+        {
+            Lobs = new[]
+            {
+                new LobRef("PROP", new[] { new CoverageRef("BLDG"), new CoverageRef("BPP") }),
+                new LobRef("GL",   new[] { new CoverageRef("GL-OCC") })
+            }
+        };
+
+        var all = manifest.AllCoverages;
+        Assert.Equal(3, all.Count);
+        Assert.Contains(all, c => c.CoverageCode == "BLDG");
+        Assert.Contains(all, c => c.CoverageCode == "BPP");
+        Assert.Contains(all, c => c.CoverageCode == "GL-OCC");
+    }
+
+    [Fact]
+    public void RiskBag_Merge_FourLevelChain_CorrectPrecedence()
+    {
+        // Policy < LOB < Risk < Coverage — each level overrides the one below
+        var policyRisk  = new Dictionary<string, string> { ["State"] = "NJ", ["Source"] = "POLICY" };
+        var lobRisk     = new Dictionary<string, string> { ["OccupancyType"] = "Office", ["Source"] = "LOB" };
+        var riskAttrs   = new Dictionary<string, string> { ["Construction"] = "Frame", ["Source"] = "RISK" };
+        var covParams   = new Dictionary<string, string> { ["CoverageLimit"] = "2000000", ["Source"] = "COVERAGE" };
+
+        var merged = RiskBag.Merge(RiskBag.Merge(RiskBag.Merge(policyRisk, lobRisk), riskAttrs), covParams);
+
+        Assert.Equal("NJ",       merged["State"]);          // from policy, unchanged
+        Assert.Equal("Office",   merged["OccupancyType"]);  // from LOB
+        Assert.Equal("Frame",    merged["Construction"]);   // from risk
+        Assert.Equal("2000000",  merged["CoverageLimit"]);  // from coverage
+        Assert.Equal("COVERAGE", merged["Source"]);         // coverage wins override chain
+    }
+
+    [Fact]
+    public void Commercial_ScheduleLevel_Coverage_SumsScheduleItems()
+    {
+        // Simulate Inland Marine: rate 3 scheduled items using the HO-PRIMARY pipeline
+        // as a proxy pipeline.  The point is the schedule loop, not the exact premiums.
+        var (coverage, lookup) = LoadPrimary();
+
+        var schedules = new[]
+        {
+            new Dictionary<string, string>(BuildBaseRisk(), StringComparer.OrdinalIgnoreCase) { ["ItemValue"] = "50000" },
+            new Dictionary<string, string>(BuildBaseRisk(), StringComparer.OrdinalIgnoreCase) { ["ItemValue"] = "25000" },
+            new Dictionary<string, string>(BuildBaseRisk(), StringComparer.OrdinalIgnoreCase) { ["ItemValue"] = "10000" }
+        };
+
+        decimal scheduleTotal = 0m;
+        foreach (var schedRisk in schedules)
+        {
+            foreach (var peril in coverage.Perils)
+            {
+                var ctx = new RateContext("BOP", coverage.Version, new DateOnly(2026, 2, 15), "NJ",
+                    schedRisk, peril, 0m);
+                var (premium, _) = new PipelineRunner(new JsonPipelineFactory().Build(coverage.Pipeline), lookup).Run(ctx);
+                scheduleTotal += premium;
+            }
+        }
+
+        // All three items use the same risk base so coverage total = 3 × single-item premium
+        decimal singleItemTotal = 0m;
+        foreach (var peril in coverage.Perils)
+        {
+            var ctx = new RateContext("BOP", coverage.Version, new DateOnly(2026, 2, 15), "NJ",
+                BuildBaseRisk(), peril, 0m);
+            var (premium, _) = new PipelineRunner(new JsonPipelineFactory().Build(coverage.Pipeline), lookup).Run(ctx);
+            singleItemTotal += premium;
+        }
+
+        Assert.Equal(singleItemTotal * 3, scheduleTotal);
+    }
+
+    [Fact]
+    public void Commercial_MultiLob_RiskPremiums_RollUpToLobAndPolicy()
+    {
+        var (coverage, lookup) = LoadPrimary();
+        var factory = new JsonPipelineFactory();
+
+        // Helper: rate one risk → sum across all perils
+        decimal RateRisk(Dictionary<string, string> risk)
+        {
+            decimal total = 0m;
+            foreach (var peril in coverage.Perils)
+            {
+                var ctx = new RateContext("BOP", coverage.Version, new DateOnly(2026, 2, 15), "NJ", risk, peril, 0m);
+                var (p, _) = new PipelineRunner(factory.Build(coverage.Pipeline), lookup).Run(ctx);
+                total += p;
+            }
+            return total;
+        }
+
+        // PROP LOB: two building risks
+        var bldg1Risk = BuildBaseRisk();
+        var bldg2Risk = new Dictionary<string, string>(BuildBaseRisk(), StringComparer.OrdinalIgnoreCase) { ["CoverageA"] = "500000" };
+        decimal propBldg1 = RateRisk(bldg1Risk);
+        decimal propBldg2 = RateRisk(bldg2Risk);
+        decimal propTotal = propBldg1 + propBldg2;
+
+        // GL LOB: one policy-level risk
+        var glRisk    = BuildBaseRisk();
+        decimal glTotal = RateRisk(glRisk);
+
+        decimal policyTotal = propTotal + glTotal;
+
+        Assert.True(propBldg1 > 0m,  "PROP building 1 should have positive premium");
+        Assert.True(propBldg2 > 0m,  "PROP building 2 should have positive premium");
+        Assert.True(glTotal   > 0m,  "GL risk should have positive premium");
+        Assert.Equal(policyTotal, propTotal + glTotal);
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────────
@@ -368,6 +495,160 @@ public class PipelineTests
         };
         var steps = new JsonPipelineFactory().Build(new[] { stepCfg });
         return steps[0].ShouldExecute(ctx);
+    }
+
+    // ── $premium in When conditions ──────────────────────────────────────────
+
+    [Theory]
+    [InlineData(300,  true)]   // 300 < 500 → step executes
+    [InlineData(500,  false)]  // 500 is not < 500 → step skips
+    [InlineData(1000, false)]  // 1000 > 500 → step skips
+    public void When_Dollar_Premium_LessThan_Gates_Step_Correctly(decimal premium, bool shouldExecute)
+    {
+        var ctx  = new RateContext("P", "1", new DateOnly(2026, 1, 1), "NJ",
+            new Dictionary<string, string>(), "FIRE", premium);
+        var when = new WhenConfig { Path = "$premium", LessThan = "500" };
+        Assert.Equal(shouldExecute, EvalWhen(when, ctx));
+    }
+
+    [Theory]
+    [InlineData(600,  true)]   // 600 > 500 → executes
+    [InlineData(500,  false)]  // not strictly greater
+    [InlineData(300,  false)]
+    public void When_Dollar_Premium_GreaterThan_Gates_Step_Correctly(decimal premium, bool shouldExecute)
+    {
+        var ctx  = new RateContext("P", "1", new DateOnly(2026, 1, 1), "NJ",
+            new Dictionary<string, string>(), "FIRE", premium);
+        var when = new WhenConfig { Path = "$premium", GreaterThan = "500" };
+        Assert.Equal(shouldExecute, EvalWhen(when, ctx));
+    }
+
+    // ── $risk.* path as numeric threshold ────────────────────────────────────
+
+    [Fact]
+    public void When_RiskPath_Threshold_Resolves_Correctly()
+    {
+        // Step fires when CurrentTotal < MinPremium (both from risk bag)
+        var risk = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["CurrentTotal"] = "400",
+            ["MinPremium"]   = "500"
+        };
+        var ctx  = new RateContext("P", "1", new DateOnly(2026, 1, 1), "NJ", risk, "FIRE", 0m);
+        var when = new WhenConfig { Path = "$risk.CurrentTotal", LessThan = "$risk.MinPremium" };
+        Assert.True(EvalWhen(when, ctx));
+    }
+
+    // ── Policy adjustment: minimum premium ───────────────────────────────────
+
+    [Fact]
+    public void PolicyAdjustment_MinimumPremium_Raises_Premium_To_Floor()
+    {
+        // Simulate the adjustment orchestrator: ScopedTotal < floor → premium is raised.
+        var scopedTotal = 400m;
+        var ctxBag = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["ScopedTotal"] = scopedTotal.ToString(System.Globalization.CultureInfo.InvariantCulture)
+        };
+        var ctx = new RateContext("P", "adj", new DateOnly(2026, 1, 1), "NJ", ctxBag, "ADJ", scopedTotal);
+
+        // Pipeline: if $premium < 500, set premium to 500
+        var stepCfg = new StepConfig
+        {
+            Id        = "min",
+            Operation = "compute",
+            Compute   = new ComputeConfig { Expr = "500", StoreAs = "_min", ApplyToPremium = true },
+            When      = new WhenConfig { Path = "$premium", LessThan = "500" }
+        };
+        var (adjustedTotal, _) = new PipelineRunner(
+            new JsonPipelineFactory().Build(new[] { stepCfg }),
+            NullRateLookup.Instance).Run(ctx);
+
+        Assert.Equal(500m, adjustedTotal);
+        Assert.Equal(100m, adjustedTotal - scopedTotal);  // +100 surcharge to reach minimum
+    }
+
+    [Fact]
+    public void PolicyAdjustment_MinimumPremium_NoChange_When_Already_Above_Floor()
+    {
+        var scopedTotal = 800m;
+        var ctxBag = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        var ctx = new RateContext("P", "adj", new DateOnly(2026, 1, 1), "NJ", ctxBag, "ADJ", scopedTotal);
+
+        var stepCfg = new StepConfig
+        {
+            Id        = "min",
+            Operation = "compute",
+            Compute   = new ComputeConfig { Expr = "500", StoreAs = "_min", ApplyToPremium = true },
+            When      = new WhenConfig { Path = "$premium", LessThan = "500" }
+        };
+        var (adjustedTotal, _) = new PipelineRunner(
+            new JsonPipelineFactory().Build(new[] { stepCfg }),
+            NullRateLookup.Instance).Run(ctx);
+
+        // Step skipped because 800 >= 500; premium unchanged
+        Assert.Equal(800m, adjustedTotal);
+        Assert.Equal(0m, adjustedTotal - scopedTotal);
+    }
+
+    // ── Policy adjustment: credit factor ────────────────────────────────────
+
+    [Fact]
+    public void PolicyAdjustment_CreditFactor_Reduces_Premium()
+    {
+        // Multi-LOB credit: multiply ScopedTotal by 0.95 (5% credit)
+        var scopedTotal = 5000m;
+        var ctxBag = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["ScopedTotal"] = "5000",
+            ["LobCount"]    = "3"
+        };
+        var ctx = new RateContext("P", "adj", new DateOnly(2026, 1, 1), "NJ", ctxBag, "ADJ", scopedTotal);
+
+        var stepCfg = new StepConfig
+        {
+            Id        = "credit",
+            Operation = "compute",
+            Compute   = new ComputeConfig { Expr = "$premium * 0.95", StoreAs = "_credited", ApplyToPremium = true }
+        };
+        var (adjustedTotal, _) = new PipelineRunner(
+            new JsonPipelineFactory().Build(new[] { stepCfg }),
+            NullRateLookup.Instance).Run(ctx);
+
+        Assert.Equal(4750m, adjustedTotal);
+        Assert.Equal(-250m, adjustedTotal - scopedTotal);  // -250 credit
+    }
+
+    // ── Cross-coverage dependency: cov_X_Premium in risk bag ────────────────
+
+    [Fact]
+    public void CrossCoverage_DependentCoverage_Reads_Injected_Premium()
+    {
+        // Simulate the orchestrator injecting CoverageA's premium before running CoverageB.
+        // CoverageB pipeline: premium = CovA_Premium * 0.10  (10% of A)
+        var covAPremium = 1000m;
+        var risk = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            [$"cov_COVA_Premium"] = covAPremium.ToString(System.Globalization.CultureInfo.InvariantCulture)
+        };
+        var ctx = new RateContext("P", "1", new DateOnly(2026, 1, 1), "NJ", risk, "FIRE", 0m);
+
+        var stepCfg = new StepConfig
+        {
+            Id        = "base_from_cova",
+            Operation = "compute",
+            Compute   = new ComputeConfig
+            {
+                Expr           = "$risk.cov_COVA_Premium * 0.10",
+                StoreAs        = "_covBPremium",
+                ApplyToPremium = true
+            }
+        };
+        var (premium, _) = new PipelineRunner(
+            new JsonPipelineFactory().Build(new[] { stepCfg }),
+            NullRateLookup.Instance).Run(ctx);
+
+        Assert.Equal(100m, premium);  // 10% of 1000
     }
 
     private static string FindRepoRoot()

@@ -40,7 +40,7 @@ public sealed class InMemoryRateLookup : IRateLookup
         if (match is null)
             throw new KeyNotFoundException($"No rate row in {rateTable} for keys: {string.Join(",", keys.Select(k=>$"{k.Key}={k.Value}"))}");
 
-        return match.Factor ?? match.Additive ?? 0m;
+        return match.Factor;
     }
 
     public decimal GetRangeKeyFactor(string rateTable, IReadOnlyDictionary<string,string> keys, string rangeKey, decimal rangeValue, DateOnly effDate)
@@ -62,7 +62,7 @@ public sealed class InMemoryRateLookup : IRateLookup
             throw new KeyNotFoundException(
                 $"No rate row in {rateTable} for keys: {string.Join(",", keys.Select(k => $"{k.Key}={k.Value}"))} rangeKey={rangeKey}={rangeValue}");
 
-        return match.Factor ?? match.Additive ?? 0m;
+        return match.Factor;
     }
 
     public decimal GetInterpolatedFactor(string rateTable, IReadOnlyDictionary<string,string> keys, string interpolationKey, DateOnly effDate)
@@ -87,7 +87,7 @@ public sealed class InMemoryRateLookup : IRateLookup
             {
                 var bpStr = r.GetKeyByIndex(interpIdx);
                 var ok = decimal.TryParse(bpStr, NumberStyles.Any, CultureInfo.InvariantCulture, out var bp);
-                return (ok, bp, factor: r.Factor ?? r.Additive ?? 0m, r.AdditionalRate, r.AdditionalUnit);
+                return (ok, bp, factor: r.Factor, r.AdditionalRate, r.AdditionalUnit);
             })
             .Where(x => x.ok)
             .GroupBy(x => x.bp)
@@ -125,8 +125,7 @@ public sealed record RateRow
     public string? Key3 { get; init; }
     public string? Key4 { get; init; }
     public string? Key5 { get; init; }
-    public decimal? Factor { get; init; }
-    public decimal? Additive { get; init; }
+    public decimal Factor { get; init; }
     public decimal? AdditionalRate { get; init; }
     public decimal? AdditionalUnit { get; init; }
     public DateOnly EffStart { get; init; }
@@ -145,12 +144,18 @@ internal static class RateRowExtensions
 
     public static bool Matches(this RateRow row, IReadOnlyDictionary<string,string> keys)
     {
-        var cols = new[] { row.Key1, row.Key2, row.Key3, row.Key4, row.Key5 };
-        int i = 0;
-        foreach (var kv in keys)
-        {
-            if (!KeyMatches(cols[i++], kv.Value)) return false;
-        }
+        // var cols = new[] { row.Key1, row.Key2, row.Key3, row.Key4, row.Key5 };
+        // int i = 0;
+        // foreach (var kv in keys)
+        // {
+        //     if (!KeyMatches(cols[i++], kv.Value)) return false;
+        // }
+        // Explicit lookup fixes the dictionary iteration order vulnerability
+        if (keys.TryGetValue("Key1", out var k1) && !KeyMatches(row.Key1, k1)) return false;
+        if (keys.TryGetValue("Key2", out var k2) && !KeyMatches(row.Key2, k2)) return false;
+        if (keys.TryGetValue("Key3", out var k3) && !KeyMatches(row.Key3, k3)) return false;
+        if (keys.TryGetValue("Key4", out var k4) && !KeyMatches(row.Key4, k4)) return false;
+        if (keys.TryGetValue("Key5", out var k5) && !KeyMatches(row.Key5, k5)) return false;
         return true;
     }
 

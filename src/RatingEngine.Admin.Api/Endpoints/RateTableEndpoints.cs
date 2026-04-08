@@ -13,13 +13,14 @@ public static class RateTableEndpoints
         // GET /admin/coverages/{coverageId}/rate-tables
         group.MapGet("/", async (
             int coverageId,
-            IRateTableAdminRepository repo) =>
-            Results.Ok(await repo.ListAsync(coverageId)));
+            IRateTableAdminRepository repo,
+            CancellationToken cancellationToken) =>
+            Results.Ok(await repo.ListAsync(coverageId, cancellationToken)));
 
         // GET /admin/coverages/{coverageId}/rate-tables/{name}
-        group.MapGet("/{name}", async (int coverageId, string name, IRateTableAdminRepository repo) =>
+        group.MapGet("/{name}", async (int coverageId, string name, IRateTableAdminRepository repo, CancellationToken cancellationToken) =>
         {
-            var result = await repo.GetAsync(coverageId, name);
+            var result = await repo.GetAsync(coverageId, name, cancellationToken);
             return result is null ? Results.NotFound() : Results.Ok(result);
         });
 
@@ -29,13 +30,14 @@ public static class RateTableEndpoints
             int coverageId,
             CreateRateTableRequest req,
             HttpContext ctx,
-            IRateTableAdminRepository repo) =>
+            IRateTableAdminRepository repo,
+            CancellationToken cancellationToken) =>
         {
             if (req.CoverageConfigId != coverageId)
                 return Results.BadRequest(new { message = "CoverageConfigId in body must match URL coverageId" });
 
             var actor = ctx.Request.Headers.TryGetValue("X-User-Id", out var uid) ? uid.ToString() : null;
-            var id = await repo.CreateAsync(req, actor);
+            var id = await repo.CreateAsync(req, actor, cancellationToken);
             return Results.Created($"/admin/coverages/{coverageId}/rate-tables/{req.Name}", new { id });
         });
 
@@ -45,15 +47,16 @@ public static class RateTableEndpoints
             int id,
             UpdateRateTableRequest req,
             HttpContext ctx,
-            IRateTableAdminRepository repo) =>
+            IRateTableAdminRepository repo,
+            CancellationToken cancellationToken) =>
         {
             var actor = ctx.Request.Headers.TryGetValue("X-User-Id", out var uid) ? uid.ToString() : null;
-            return await repo.UpdateAsync(id, req, actor) ? Results.Ok() : Results.NotFound();
+            return await repo.UpdateAsync(id, req, actor, cancellationToken) ? Results.Ok() : Results.NotFound();
         });
 
         // DELETE /admin/coverages/{coverageId}/rate-tables/{id}
-        group.MapDelete("/{id:int}", async (int coverageId, int id, IRateTableAdminRepository repo) =>
-            await repo.DeleteAsync(id) ? Results.NoContent() : Results.NotFound());
+        group.MapDelete("/{id:int}", async (int coverageId, int id, IRateTableAdminRepository repo, CancellationToken cancellationToken) =>
+            await repo.DeleteAsync(id, cancellationToken) ? Results.NoContent() : Results.NotFound());
 
         // ── Rows ──────────────────────────────────────────────────────────────
 
@@ -62,17 +65,19 @@ public static class RateTableEndpoints
             int coverageId,
             string name,
             DateOnly? effectiveDate,
-            IRateTableAdminRepository repo) =>
-            Results.Ok(await repo.GetRowsAsync(coverageId, name, effectiveDate)));
+            IRateTableAdminRepository repo,
+            CancellationToken cancellationToken) =>
+            Results.Ok(await repo.GetRowsAsync(coverageId, name, effectiveDate, cancellationToken)));
 
         // POST /admin/coverages/{coverageId}/rate-tables/{name}/rows
         group.MapPost("/{name}/rows", async (
             int coverageId,
             string name,
             CreateRateTableRowRequest req,
-            IRateTableAdminRepository repo) =>
+            IRateTableAdminRepository repo,
+            CancellationToken cancellationToken) =>
         {
-            var id = await repo.AddRowAsync(coverageId, name, req);
+            var id = await repo.AddRowAsync(coverageId, name, req, cancellationToken);
             return Results.Created($"/admin/coverages/{coverageId}/rate-tables/{name}/rows/{id}", new { id });
         });
 
@@ -81,9 +86,10 @@ public static class RateTableEndpoints
             int coverageId,
             string name,
             BulkInsertRowsRequest req,
-            IRateTableAdminRepository repo) =>
+            IRateTableAdminRepository repo,
+            CancellationToken cancellationToken) =>
         {
-            var count = await repo.BulkInsertRowsAsync(coverageId, name, req.Rows);
+            var count = await repo.BulkInsertRowsAsync(coverageId, name, req.Rows, cancellationToken);
             return Results.Ok(new { inserted = count });
         });
 
@@ -91,21 +97,24 @@ public static class RateTableEndpoints
         group.MapPut("/{name}/rows/{rowId:long}", async (
             int coverageId, string name, long rowId,
             CreateRateTableRowRequest req,
-            IRateTableAdminRepository repo) =>
-            await repo.UpdateRowAsync(rowId, req) ? Results.Ok() : Results.NotFound());
+            IRateTableAdminRepository repo,
+            CancellationToken cancellationToken) =>
+            await repo.UpdateRowAsync(coverageId, name, rowId, req, cancellationToken) ? Results.Ok() : Results.NotFound());
 
         // POST /admin/coverages/{coverageId}/rate-tables/{name}/rows/{rowId}/expire
         group.MapPost("/{name}/rows/{rowId:long}/expire", async (
             int coverageId, string name, long rowId,
             ExpireRequest req,
-            IRateTableAdminRepository repo) =>
-            await repo.ExpireRowAsync(rowId, req.ExpireAt) ? Results.Ok() : Results.NotFound());
+            IRateTableAdminRepository repo,
+            CancellationToken cancellationToken) =>
+            await repo.ExpireRowAsync(rowId, req.ExpireAt, cancellationToken) ? Results.Ok() : Results.NotFound());
 
         // DELETE /admin/coverages/{coverageId}/rate-tables/{name}/rows/{rowId}
         group.MapDelete("/{name}/rows/{rowId:long}", async (
             int coverageId, string name, long rowId,
-            IRateTableAdminRepository repo) =>
-            await repo.DeleteRowAsync(rowId) ? Results.NoContent() : Results.NotFound());
+            IRateTableAdminRepository repo,
+            CancellationToken cancellationToken) =>
+            await repo.DeleteRowAsync(rowId, cancellationToken) ? Results.NoContent() : Results.NotFound());
 
         return app;
     }

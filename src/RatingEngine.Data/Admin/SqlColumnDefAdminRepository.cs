@@ -7,7 +7,7 @@ public sealed class SqlColumnDefAdminRepository : IColumnDefAdminRepository
     private readonly DbConnectionFactory _db;
     public SqlColumnDefAdminRepository(DbConnectionFactory db) => _db = db;
 
-    public async Task<IReadOnlyList<ColumnDefDetail>> ListAsync(string tableName)
+    public async Task<IReadOnlyList<ColumnDefDetail>> ListAsync(string tableName, CancellationToken cancellationToken = default)
     {
         const string sql = """
             SELECT d.Id, d.ColumnName, d.DisplayLabel, d.DataType, d.SortOrder, d.IsRequired
@@ -18,10 +18,13 @@ public sealed class SqlColumnDefAdminRepository : IColumnDefAdminRepository
             """;
 
         using var conn = _db.Create();
-        return (await conn.QueryAsync<ColumnDefDetail>(sql, new { TableName = tableName })).AsList();
+        return (await conn.QueryAsync<ColumnDefDetail>(new CommandDefinition(
+            sql,
+            new { TableName = tableName },
+            cancellationToken: cancellationToken))).AsList();
     }
 
-    public async Task ReplaceAsync(string tableName, IReadOnlyList<ColumnDefRequest> columnDefs)
+    public async Task ReplaceAsync(string tableName, IReadOnlyList<ColumnDefRequest> columnDefs, CancellationToken cancellationToken = default)
     {
         const string tableIdSql = "SELECT Id FROM RateTable WHERE Name = @Name";
         const string deleteSql  = "DELETE FROM RateTableColumnDef WHERE RateTableId = @TableId";
@@ -34,24 +37,35 @@ public sealed class SqlColumnDefAdminRepository : IColumnDefAdminRepository
         using var conn = _db.Create();
         conn.Open();
 
-        var tableId = await conn.ExecuteScalarAsync<int?>(tableIdSql, new { Name = tableName })
+        var tableId = await conn.ExecuteScalarAsync<int?>(new CommandDefinition(
+            tableIdSql,
+            new { Name = tableName },
+            cancellationToken: cancellationToken))
             ?? throw new InvalidOperationException($"Rate table '{tableName}' not found.");
 
         using var tx = conn.BeginTransaction();
 
-        await conn.ExecuteAsync(deleteSql, new { TableId = tableId }, tx);
+        await conn.ExecuteAsync(new CommandDefinition(
+            deleteSql,
+            new { TableId = tableId },
+            transaction: tx,
+            cancellationToken: cancellationToken));
 
         foreach (var col in columnDefs)
-            await conn.ExecuteAsync(insertSql, new
-            {
-                RateTableId = tableId,
-                col.ColumnName, col.DisplayLabel, col.DataType, col.SortOrder, col.IsRequired
-            }, tx);
+            await conn.ExecuteAsync(new CommandDefinition(
+                insertSql,
+                new
+                {
+                    RateTableId = tableId,
+                    col.ColumnName, col.DisplayLabel, col.DataType, col.SortOrder, col.IsRequired
+                },
+                transaction: tx,
+                cancellationToken: cancellationToken));
 
         tx.Commit();
     }
 
-    public async Task<bool> UpdateAsync(int columnDefId, ColumnDefRequest req)
+    public async Task<bool> UpdateAsync(int columnDefId, ColumnDefRequest req, CancellationToken cancellationToken = default)
     {
         const string sql = """
             UPDATE RateTableColumnDef
@@ -61,17 +75,22 @@ public sealed class SqlColumnDefAdminRepository : IColumnDefAdminRepository
             """;
 
         using var conn = _db.Create();
-        return await conn.ExecuteAsync(sql, new
-        {
-            Id = columnDefId,
-            req.ColumnName, req.DisplayLabel, req.DataType, req.SortOrder, req.IsRequired
-        }) > 0;
+        return await conn.ExecuteAsync(new CommandDefinition(
+            sql,
+            new
+            {
+                Id = columnDefId,
+                req.ColumnName, req.DisplayLabel, req.DataType, req.SortOrder, req.IsRequired
+            },
+            cancellationToken: cancellationToken)) > 0;
     }
 
-    public async Task<bool> DeleteAsync(int columnDefId)
+    public async Task<bool> DeleteAsync(int columnDefId, CancellationToken cancellationToken = default)
     {
         using var conn = _db.Create();
-        return await conn.ExecuteAsync(
-            "DELETE FROM RateTableColumnDef WHERE Id = @Id", new { Id = columnDefId }) > 0;
+        return await conn.ExecuteAsync(new CommandDefinition(
+            "DELETE FROM RateTableColumnDef WHERE Id = @Id",
+            new { Id = columnDefId },
+            cancellationToken: cancellationToken)) > 0;
     }
 }

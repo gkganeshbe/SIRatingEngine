@@ -1,4 +1,5 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { isExpired } from '../../../core/utils/date.utils';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
@@ -71,8 +72,8 @@ import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-d
 
             <!-- Status chip -->
             <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px">
-              <mat-chip [color]="p.expireAt ? 'warn' : 'primary'" highlighted style="font-size:11px">
-                {{p.expireAt ? 'Expired' : 'Active'}}
+              <mat-chip [color]="isExpired(p.expireAt) ? 'warn' : 'primary'" highlighted style="font-size:11px">
+                {{isExpired(p.expireAt) ? 'Expired' : 'Active'}}
               </mat-chip>
               <span style="font-size:11px;color:rgba(0,0,0,.38)">v{{p.version}}</span>
             </div>
@@ -85,7 +86,7 @@ import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-d
             <!-- Meta -->
             <div style="font-size:12px;color:rgba(0,0,0,.54);margin-bottom:4px">
               Effective from <strong>{{p.effStart}}</strong>
-              <span *ngIf="p.expireAt"> · Expired <strong style="color:#f44336">{{p.expireAt}}</strong></span>
+              <span *ngIf="isExpired(p.expireAt)"> · Expired <strong style="color:#f44336">{{p.expireAt}}</strong></span>
             </div>
             <div *ngIf="p.createdBy" style="font-size:12px;color:rgba(0,0,0,.38)">
               Created by {{p.createdBy}}
@@ -107,7 +108,7 @@ import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-d
             <button mat-button (click)="openEdit(p)" style="flex:1">
               <mat-icon>edit</mat-icon> Edit
             </button>
-            <button mat-button (click)="expire(p)" [disabled]="!!p.expireAt" style="flex:1">
+            <button mat-button (click)="expire(p)" [disabled]="isExpired(p.expireAt)" style="flex:1">
               <mat-icon>event_busy</mat-icon> Expire
             </button>
             <button mat-button color="warn" (click)="delete(p)" style="flex:1">
@@ -121,6 +122,7 @@ import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-d
   `
 })
 export class ProductListComponent implements OnInit {
+  readonly isExpired = isExpired;
   products: ProductSummary[] = [];
   loading = true;
   error = '';

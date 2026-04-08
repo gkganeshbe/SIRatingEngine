@@ -1,5 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ACTIVE_EXPIRE, isExpired } from '../../../core/utils/date.utils';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { MatTableModule } from '@angular/material/table';
@@ -23,6 +24,7 @@ import {
   CreateRateTableRowRequest, ColumnDefRequest
 } from '../../../core/models/api.models';
 import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-dialog.component';
+import { RateTableExcelGridComponent } from '../rate-table-excel-grid/rate-table-excel-grid.component';
 
 @Component({
   selector: 'app-rate-table-detail',
@@ -33,6 +35,7 @@ import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-d
     MatTabsModule, MatFormFieldModule, MatInputModule, MatSelectModule,
     MatCheckboxModule, MatChipsModule, MatProgressSpinnerModule,
     MatTooltipModule, MatSnackBarModule, MatDialogModule,
+    RateTableExcelGridComponent,
   ],
   template: `
     <div class="page-container" *ngIf="table">
@@ -67,27 +70,29 @@ import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-d
               </button>
             </div>
 
-            <!-- Bulk import panel -->
+            <!-- Bulk import panel — Excel paste -->
             <mat-card *ngIf="showImport" style="margin-bottom:16px">
-              <mat-card-header><mat-card-title>Bulk Import (JSON)</mat-card-title></mat-card-header>
-              <mat-card-content>
-                <p style="font-size:12px;color:rgba(0,0,0,.6)">
-                  Paste a JSON array of row objects. Each object maps column names to values.
-                  Key columns: Key1-Key5. Value columns: Factor, Additive, AdditionalUnit, AdditionalRate.
-                  Required: effStart (YYYY-MM-DD).
-                </p>
-                <mat-form-field class="full-width">
-                  <mat-label>JSON rows</mat-label>
-                  <textarea matInput [(ngModel)]="bulkJson" rows="6"
-                            placeholder='[{"Key1":"FR","Key2":"1","Factor":0.95,"effStart":"2026-02-01"}]'>
-                  </textarea>
-                </mat-form-field>
+              <mat-card-header>
+                <mat-card-title>Excel Bulk Import</mat-card-title>
+                <mat-card-subtitle>
+                  Copy a data range from Excel (no header row needed) and paste it below.
+                </mat-card-subtitle>
+              </mat-card-header>
+              <mat-card-content style="padding-top:8px">
+                <app-rate-table-excel-grid
+                  [columnDefs]="colDefs"
+                  [effStart]="effectiveDateFilter || todayStr"
+                  (rowsParsed)="onExcelRowsParsed($event)">
+                </app-rate-table-excel-grid>
               </mat-card-content>
               <mat-card-actions>
-                <button mat-flat-button color="primary" (click)="bulkImport()" [disabled]="!bulkJson">
-                  Import
+                <button mat-flat-button color="primary"
+                        [disabled]="excelRows.length === 0"
+                        (click)="bulkImportExcel()">
+                  <mat-icon>upload</mat-icon>
+                  Save {{excelRows.length > 0 ? excelRows.length + ' Rows' : ''}}
                 </button>
-                <button mat-button (click)="showImport = false">Cancel</button>
+                <button mat-button (click)="showImport = false; excelRows = []">Cancel</button>
               </mat-card-actions>
             </mat-card>
 
@@ -160,8 +165,8 @@ import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-d
                 <ng-container matColumnDef="expireAt">
                   <th mat-header-cell *matHeaderCellDef>Expires</th>
                   <td mat-cell *matCellDef="let row">
-                    <span *ngIf="row.expireAt" style="color:#f44336">{{row.expireAt}}</span>
-                    <span *ngIf="!row.expireAt" style="color:rgba(0,0,0,.38)">—</span>
+                    <span *ngIf="isExpired(row.expireAt)" style="color:#f44336">{{row.expireAt}}</span>
+                    <span *ngIf="!isExpired(row.expireAt)" style="color:rgba(0,0,0,.38)">—</span>
                   </td>
                 </ng-container>
                 <ng-container matColumnDef="rowActions">
@@ -170,7 +175,7 @@ import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-d
                     <button mat-icon-button matTooltip="Edit" (click)="startEditRow(row)">
                       <mat-icon>edit</mat-icon>
                     </button>
-                    <button mat-icon-button matTooltip="Expire" [disabled]="!!row.expireAt"
+                    <button mat-icon-button matTooltip="Expire" [disabled]="isExpired(row.expireAt)"
                             (click)="expireRow(row)">
                       <mat-icon>event_busy</mat-icon>
                     </button>
@@ -183,7 +188,7 @@ import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-d
 
                 <tr mat-header-row *matHeaderRowDef="tableRowColumns"></tr>
                 <tr mat-row *matRowDef="let row; columns: tableRowColumns;"
-                    [class.expired-row]="row.expireAt"></tr>
+                    [class.expired-row]="isExpired(row.expireAt)"></tr>
               </table>
               <div *ngIf="rows.length === 0" style="color:rgba(0,0,0,.38);padding:24px;text-align:center">
                 No rows found. Add a row or adjust the effective date filter.
@@ -266,6 +271,7 @@ import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-d
   `
 })
 export class RateTableDetailComponent implements OnInit {
+  readonly isExpired = isExpired;
   table: RateTableDetail | null = null;
   rows: RateTableRowDetail[] = [];
   colDefs: ColumnDefDetail[] = [];
@@ -275,7 +281,8 @@ export class RateTableDetailComponent implements OnInit {
   tableName = '';
   effectiveDateFilter = '';
   showImport = false;
-  bulkJson = '';
+  excelRows: CreateRateTableRowRequest[] = [];
+  readonly todayStr = new Date().toISOString().slice(0, 10);
   coverageQueryParams: Record<string, string> = {};
 
   // Row editing
@@ -291,7 +298,8 @@ export class RateTableDetailComponent implements OnInit {
     private colDefSvc: ColumnDefService,
     private dialog: MatDialog,
     private snack: MatSnackBar,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit() {
@@ -307,9 +315,10 @@ export class RateTableDetailComponent implements OnInit {
         this.table = t;
         this.colDefs = t.columnDefs;
         this.loading = false;
+        this.cdr.detectChanges();
         this.loadRows();
       },
-      error: () => { this.loading = false; }
+      error: () => { this.loading = false; this.cdr.detectChanges(); }
     });
   }
 
@@ -317,8 +326,8 @@ export class RateTableDetailComponent implements OnInit {
     if (!this.table) return;
     this.rowsLoading = true;
     this.svc.getRows(this.coverageId, this.tableName, this.effectiveDateFilter || undefined).subscribe({
-      next:  r  => { this.rows = r; this.rowsLoading = false; },
-      error: () => { this.rowsLoading = false; }
+      next:  r  => { this.rows = r; this.rowsLoading = false; this.cdr.detectChanges(); },
+      error: () => { this.rowsLoading = false; this.cdr.detectChanges(); }
     });
   }
 
@@ -337,7 +346,7 @@ export class RateTableDetailComponent implements OnInit {
 
   get valueColumns(): string[] {
     return this.colDefs
-      .filter(c => ['Factor','Additive','AdditionalUnit','AdditionalRate'].includes(c.columnName))
+      .filter(c => ['Factor','AdditionalUnit','AdditionalRate'].includes(c.columnName))
       .map(c => c.columnName);
   }
 
@@ -380,12 +389,12 @@ export class RateTableDetailComponent implements OnInit {
   private buildRowForm(row?: RateTableRowDetail) {
     const controls: Record<string, unknown> = {
       effStart: [row?.effStart ?? '', Validators.required],
-      expireAt: [row?.expireAt ?? ''],
+      expireAt: [row?.expireAt ?? ACTIVE_EXPIRE],
     };
     ['key1','key2','key3','key4','key5'].forEach(k => {
       controls[k] = [(row as unknown as Record<string,unknown>)?.[k] ?? ''];
     });
-    ['rangeFrom','rangeTo','factor','additive','additionalUnit','additionalRate'].forEach(k => {
+    ['rangeFrom','rangeTo','factor','additionalUnit','additionalRate'].forEach(k => {
       controls[k] = [(row as unknown as Record<string,unknown>)?.[k] ?? ''];
     });
     this.rowForm = this.fb.group(controls);
@@ -413,70 +422,56 @@ export class RateTableDetailComponent implements OnInit {
       key4: v.key4 || null, key5: v.key5 || null,
       rangeFrom: v.rangeFrom !== '' ? +v.rangeFrom : null,
       rangeTo:   v.rangeTo   !== '' ? +v.rangeTo   : null,
-      factor:    v.factor    !== '' ? +v.factor    : null,
-      additive:  v.additive  !== '' ? +v.additive  : null,
+      factor:    v.factor    !== '' ? +v.factor    : 0,
       additionalUnit: v.additionalUnit !== '' ? +v.additionalUnit : null,
       additionalRate: v.additionalRate !== '' ? +v.additionalRate : null,
       effStart:  v.effStart,
-      expireAt:  v.expireAt || null,
+      expireAt:  v.expireAt || ACTIVE_EXPIRE,
     };
 
     const done = () => { this.cancelEdit(); this.loadRows(); };
 
     if (this.editRowId) {
       this.svc.updateRow(this.coverageId, this.tableName, this.editRowId, req)
-        .subscribe({ next: done, error: () => this.snack.open('Update failed', 'Dismiss', { duration: 3000 }) });
+        .subscribe({ next: done, error: () => { this.snack.open('Update failed', 'Dismiss', { duration: 3000 }); this.cdr.detectChanges(); } });
     } else {
       this.svc.addRow(this.coverageId, this.tableName, req)
-        .subscribe({ next: done, error: () => this.snack.open('Add failed', 'Dismiss', { duration: 3000 }) });
+        .subscribe({ next: done, error: () => { this.snack.open('Add failed', 'Dismiss', { duration: 3000 }); this.cdr.detectChanges(); } });
     }
   }
 
   expireRow(row: RateTableRowDetail) {
     const today = new Date().toISOString().slice(0, 10);
     this.svc.expireRow(this.coverageId, this.tableName, row.id, today)
-      .subscribe(() => this.loadRows());
+      .subscribe(() => { this.loadRows(); this.cdr.detectChanges(); });
   }
 
   deleteRow(row: RateTableRowDetail) {
     this.dialog.open(ConfirmDialogComponent, {
       data: { title: 'Delete Row', message: 'Delete this rate row? This cannot be undone.' }
     }).afterClosed().subscribe(ok => {
-      if (ok) this.svc.deleteRow(this.coverageId, this.tableName, row.id).subscribe(() => this.loadRows());
+      if (ok) this.svc.deleteRow(this.coverageId, this.tableName, row.id).subscribe(() => { this.loadRows(); this.cdr.detectChanges(); });
     });
   }
 
-  // ── Bulk import ───────────────────────────────────────────────────────────
+  // ── Bulk import (Excel paste) ─────────────────────────────────────────────
 
-  bulkImport() {
-    let rows: Record<string, unknown>[];
-    try { rows = JSON.parse(this.bulkJson); }
-    catch { this.snack.open('Invalid JSON', 'Dismiss', { duration: 3000 }); return; }
+  onExcelRowsParsed(rows: CreateRateTableRowRequest[]): void {
+    this.excelRows = rows;
+    this.cdr.detectChanges();
+  }
 
-    const requests: CreateRateTableRowRequest[] = rows.map(r => ({
-      key1: (r['Key1'] as string) ?? null,
-      key2: (r['Key2'] as string) ?? null,
-      key3: (r['Key3'] as string) ?? null,
-      key4: (r['Key4'] as string) ?? null,
-      key5: (r['Key5'] as string) ?? null,
-      rangeFrom: r['RangeFrom'] != null ? +(r['RangeFrom'] as number) : null,
-      rangeTo:   r['RangeTo']   != null ? +(r['RangeTo']   as number) : null,
-      factor:    r['Factor']    != null ? +(r['Factor']    as number) : null,
-      additive:  r['Additive']  != null ? +(r['Additive']  as number) : null,
-      additionalUnit: r['AdditionalUnit'] != null ? +(r['AdditionalUnit'] as number) : null,
-      additionalRate: r['AdditionalRate'] != null ? +(r['AdditionalRate'] as number) : null,
-      effStart:  (r['effStart'] as string) ?? (r['EffStart'] as string),
-      expireAt:  (r['expireAt'] as string) ?? (r['ExpireAt'] as string) ?? null,
-    }));
-
-    this.svc.bulkInsertRows(this.coverageId, this.tableName, requests).subscribe({
+  bulkImportExcel(): void {
+    if (this.excelRows.length === 0) return;
+    this.svc.bulkInsertRows(this.coverageId, this.tableName, this.excelRows).subscribe({
       next: res => {
-        this.snack.open(`Imported ${res.inserted} rows`, '', { duration: 3000 });
+        this.snack.open(`Imported ${res.inserted} row${res.inserted !== 1 ? 's' : ''}`, '', { duration: 3000 });
         this.showImport = false;
-        this.bulkJson   = '';
+        this.excelRows  = [];
         this.loadRows();
+        this.cdr.detectChanges();
       },
-      error: () => this.snack.open('Bulk import failed', 'Dismiss', { duration: 4000 })
+      error: () => { this.snack.open('Bulk import failed', 'Dismiss', { duration: 4000 }); this.cdr.detectChanges(); }
     });
   }
 
@@ -510,6 +505,6 @@ export class RateTableDetailComponent implements OnInit {
   }
 
   private reloadColDefs() {
-    this.colDefSvc.list(this.tableName).subscribe(d => { this.colDefs = d; });
+    this.colDefSvc.list(this.tableName).subscribe(d => { this.colDefs = d; this.cdr.detectChanges(); });
   }
 }

@@ -25,6 +25,14 @@ This guide is for teams who configure and operate the SI Rating Engine. It cover
 7. [Quote API Reference](#7-quote-api-reference)
 8. [Rate Table Design Patterns](#8-rate-table-design-patterns)
 9. [Worked Premium Calculation Examples](#9-worked-premium-calculation-examples)
+10. [Commercial Multi-LOB Rating](#10-commercial-multi-lob-rating)
+    - [Key Concepts](#101-key-concepts)
+    - [Product Manifest with LOBs](#102-product-manifest-with-lobs)
+    - [Risk Bag Merge Chain](#103-risk-bag-merge-chain)
+    - [Request Structure](#104-request-structure)
+    - [Response Structure](#105-response-structure)
+    - [Pipeline Configuration Notes](#106-notes-for-pipeline-configuration)
+    - [SQL Schema](#107-sql-schema-database-storage)
 
 ---
 
@@ -42,6 +50,7 @@ Caller (Vendor / Carrier System)
 │   POST /quote/rate                     │
 │   POST /quote/rate-policy-segments    │
 │   POST /quote/rate-coverage-segments  │
+│   POST /quote/rate-commercial         │  ← commercial multi-LOB
 └───────────────────────────────────────┘
         │
         ▼ (engine resolves internally — caller never picks a pipeline)
@@ -1839,6 +1848,243 @@ For `InsuredValue=750000` and `DeductibleCode=DED1000`:
 - Key1 matches `DED1000` ✓
 - 500000 ≤ 750000 ≤ 999999 ✓ → Factor = **0.92**
 - `premium = premium × 0.92`
+
+---
+
+---
+
+## 10. Commercial Multi-LOB Rating
+
+The `POST /quote/rate-commercial` endpoint supports commercial products where a single policy submission spans multiple **Lines of Business (LOBs)**, each containing one or more rated **risks** at different hierarchy levels (building, location, policy).
+
+### 10.1 Key Concepts
+
+| Concept | Description |
+|---|---|
+| **LOB** | A line of business within the policy (e.g., PROP, GL, LIQLIAB, AUTO) |
+| **Risk** | A rated unit within a LOB — a building, location, or policy-level risk |
+| **RiskLevel** | The hierarchy tier of the risk: `"BUILDING"`, `"LOCATION"`, or `"POLICY"` |
+| **RatingType** | Per-coverage: `"NORMAL"` (single pass) or `"SCHEDLEVEL"` (one pass per schedule item) |
+
+These two dimensions are **orthogonal** — any risk at any level can have any coverage, and any coverage can use either rating type. For example, a POLICY-level Inland Marine coverage can still use `SCHEDLEVEL` to rate individual scheduled items.
+
+### 10.2 Product Manifest with LOBs
+
+Commercial products declare their coverages under named LOBs in the product manifest:
+
+```json
+{
+  "productCode": "BOP",
+  "version": "2026.02",
+  "effectiveStart": "2026-02-01",
+  "coverages": [],
+  "lobs": [
+    {
+      "lobCode": "PROP",
+      "coverages": [
+        { "coverageCode": "BLDG",   "version": "2026.02" },
+        { "coverageCode": "BPP",    "version": "2026.02" },
+        { "coverageCode": "IM",     "version": "2026.02" }
+      ]
+    },
+    {
+      "lobCode": "GL",
+      "coverages": [
+        { "coverageCode": "GL-OCC", "version": "2026.02" },
+        { "coverageCode": "GL-AGG", "version": "2026.02" }
+      ]
+    }
+  ]
+}
+```
+
+Personal lines products continue to use the flat `coverages` array — no changes required to existing configurations.
+
+### 10.3 Risk Bag Merge Chain
+
+The engine constructs a merged risk bag for every rated unit using this precedence order (later entries override earlier):
+
+```
+PolicyRisk  →  LobRisk  →  Risk.Attributes  →  CoverageParams  →  ScheduleFields
+```
+
+- **PolicyRisk** — attributes shared across all LOBs (e.g., state, policy form)
+- **LobRisk** — attributes shared across all risks in a LOB (e.g., `OccupancyType` for PROP)
+- **Risk.Attributes** — the specific risk's own fields (e.g., `Construction`, `YearBuilt` for a building)
+- **CoverageParams** — coverage-specific parameters (e.g., `CoverageLimit`)
+- **ScheduleFields** — individual item fields for `SCHEDLEVEL` coverages (e.g., `ItemValue`)
+
+This means a coverage param can override a risk attribute, and a schedule field can override everything — giving fine-grained control at each level.
+
+### 10.4 Request Structure
+
+```
+POST /quote/rate-commercial
+Authorization: Bearer <token>
+X-Tenant-Id: <tenant>
+Content-Type: application/json
+```
+
+```json
+{
+  "productCode": "BOP",
+  "rateState": "NJ",
+  "rateEffectiveDate": "2026-03-01",
+  "policyRisk": {
+    "PolicyForm": "BOP-STD",
+    "State": "NJ"
+  },
+  "lobs": [
+    {
+      "lobCode": "PROP",
+      "lobRisk": { "OccupancyType": "Office" },
+      "risks": [
+        {
+          "riskId": "B1",
+          "riskLevel": "BUILDING",
+          "locationId": "L1",
+          "attributes": {
+            "Construction": "Frame",
+            "YearBuilt": "1995",
+            "Sprinklered": "True"
+          },
+          "coverages": [
+            {
+              "id": "BLDG",
+              "name": "Building",
+              "params": { "CoverageLimit": "2000000" }
+            },
+            {
+              "id": "BPP",
+              "name": "Business Personal Property",
+              "params": { "CoverageLimit": "500000" }
+            }
+          ]
+        },
+        {
+          "riskId": "POL",
+          "riskLevel": "POLICY",
+          "attributes": {},
+          "coverages": [
+            {
+              "id": "IM",
+              "name": "Inland Marine",
+              "ratingType": "SCHEDLEVEL",
+              "params": { "ClassCode": "IM-EQUIP" },
+              "schedules": [
+                { "ScheduleId": "I1", "ItemType": "Equipment", "ItemValue": "50000", "Description": "Crane" },
+                { "ScheduleId": "I2", "ItemType": "Equipment", "ItemValue": "25000", "Description": "Generator" }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "lobCode": "GL",
+      "lobRisk": {},
+      "risks": [
+        {
+          "riskId": "L1",
+          "riskLevel": "LOCATION",
+          "attributes": { "ClassCode": "41650", "Exposure": "150000" },
+          "coverages": [
+            { "id": "GL-OCC", "name": "GL Occurrence", "params": { "OccurrenceLimit": "1000000" } },
+            { "id": "GL-AGG", "name": "GL Aggregate",  "params": { "AggregateLimit": "2000000" } }
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
+
+### 10.5 Response Structure
+
+Premiums are rolled up: schedule items → coverage → risk → LOB → policy.
+
+```json
+{
+  "policyTotal": 18500.00,
+  "lobs": [
+    {
+      "lobCode": "PROP",
+      "lobTotal": 14200.00,
+      "risks": [
+        {
+          "riskId": "B1",
+          "riskLevel": "BUILDING",
+          "locationId": "L1",
+          "riskTotal": 7800.00,
+          "coverages": [
+            {
+              "id": "BLDG",
+              "name": "Building",
+              "premium": 6200.00,
+              "perils": [
+                { "peril": "FIRE",  "premium": 3100.00, "trace": [...] },
+                { "peril": "WIND",  "premium": 2100.00, "trace": [...] },
+                { "peril": "THEFT", "premium": 1000.00, "trace": [...] }
+              ]
+            },
+            {
+              "id": "BPP",
+              "name": "Business Personal Property",
+              "premium": 1600.00,
+              "perils": [...]
+            }
+          ]
+        },
+        {
+          "riskId": "POL",
+          "riskLevel": "POLICY",
+          "locationId": null,
+          "riskTotal": 6400.00,
+          "coverages": [
+            {
+              "id": "IM",
+              "name": "Inland Marine",
+              "premium": 6400.00,
+              "schedules": [
+                { "scheduleId": "I1", "premium": 4200.00, "perils": [...] },
+                { "scheduleId": "I2", "premium": 2200.00, "perils": [...] }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "lobCode": "GL",
+      "lobTotal": 4300.00,
+      "risks": [
+        {
+          "riskId": "L1",
+          "riskLevel": "LOCATION",
+          "locationId": null,
+          "riskTotal": 4300.00,
+          "coverages": [
+            { "id": "GL-OCC", "name": "GL Occurrence", "premium": 2800.00, "perils": [...] },
+            { "id": "GL-AGG", "name": "GL Aggregate",  "premium": 1500.00, "perils": [...] }
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
+
+### 10.6 Notes for Pipeline Configuration
+
+- **Coverage configs are unchanged** — the same `CoverageConfig` + pipeline used by personal lines works for commercial. The pipeline sees a flat `RiskBag` regardless of how it was assembled.
+- **`RatingType = "SCHEDLEVEL"` on commercial coverages** works identically to the personal lines endpoints — one pipeline run per schedule entry, results summed for the coverage.
+- **`$risk.RiskLevel`** is available as a risk bag key (populated from the risk's `RiskLevel` field) if a step needs to guard on hierarchy tier using a `When` condition.
+- **`$risk.LocationId`** is likewise available in the bag so pipelines can reference parent-location context.
+- **Admin API** — coverage configuration for commercial products is identical to personal lines. Create each commercial coverage (`BLDG`, `BPP`, `IM`, etc.) as a separate `CoverageConfig` entry via the Admin API. The LOB grouping only lives in the product manifest, not in the coverage configs.
+
+### 10.7 SQL Schema (Database Storage)
+
+Run `sql/02_Add_ProductLob.sql` to add the `ProductLob` table and `CoverageRef.LobId` column. Existing personal lines products and their coverage refs are unaffected (their `LobId` remains `NULL`).
 
 ---
 

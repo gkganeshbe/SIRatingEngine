@@ -1,0 +1,48 @@
+<div class="trace-stepper-container">
+  <mat-accordion class="trace-accordion" multi>
+    
+    <mat-expansion-panel *ngFor="let trace of traces; let last = last" [expanded]="last">
+      
+      <!-- Step Summary Header -->
+      <mat-expansion-panel-header>
+        <mat-panel-title>
+          <strong>{{ trace.stepName || trace.stepId }}</strong>
+          <span class="step-id">({{ trace.stepId }})</span>
+        </mat-panel-title>
+        <mat-panel-description class="trace-summary">
+          {{ trace.before | currency }} ➔ <strong style="color: #2e7d32; margin-left: 4px;">{{ trace.after | currency }}</strong>
+        </mat-panel-description>
+      </mat-expansion-panel-header>
+
+      <div class="trace-details">
+        
+        <!-- Explain the Math Calculation -->
+        <div class="trace-math" *ngIf="trace.formula || trace.factor !== null || trace.note">
+          <p class="section-title">Calculation:</p>
+          <div class="math-box">
+            <span *ngIf="trace.formula">{{ trace.formula }}</span>
+            <span *ngIf="!trace.formula && trace.factor !== null">
+              [Prior: {{ trace.before | currency }}] &times; [Factor: {{ trace.factor }}] = {{ trace.after | currency }}
+            </span>
+            <span *ngIf="!trace.formula && trace.factor === null && trace.note">
+              Operation: {{ trace.note }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Show the Lookup Origin (if a rate table was queried) -->
+        <div class="trace-rate-table" *ngIf="trace.rateTable">
+          <p class="section-title">Lookup Source: <strong>{{ trace.rateTable }}</strong></p>
+          <table class="key-value-table" *ngIf="hasData(trace.keys)">
+            <tr *ngFor="let kv of trace.keys | keyvalue">
+              <td>{{ kv.key }}</td>
+              <td><code>{{ kv.value }}</code></td>
+            </tr>
+          </table>
+        </div>
+
+      </div>
+      
+    </mat-expansion-panel>
+  </mat-accordion>
+</div>

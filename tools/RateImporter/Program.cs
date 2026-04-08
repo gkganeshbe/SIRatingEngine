@@ -61,11 +61,11 @@ foreach (var kv in sheetMap)
         con.Open();
         foreach (var r in rows)
         {
-            await con.ExecuteAsync(@"insert into RateRow (RateTableId, Key1, Key2, Key3, Key4, Key5, Factor, Additive, EffStart, EffEnd, Jurisdiction)
-              select rt.RateTableId, @Key1,@Key2,@Key3,@Key4,@Key5,@Factor,@Additive,@EffStart,@EffEnd,@Jurisdiction
+            await con.ExecuteAsync(@"insert into RateRow (RateTableId, Key1, Key2, Key3, Key4, Key5, Value, EffStart, EffEnd, Jurisdiction)
+              select rt.RateTableId, @Key1,@Key2,@Key3,@Key4,@Key5,@Value,@EffStart,@EffEnd,@Jurisdiction
               from RateTable rt where rt.Name=@Name and rt.ProductVersionId = (select top 1 ProductVersionId from ProductVersion where ProductCode=@Product and Version=@Version)",
               new {
-                Name = kv.Value, r.Key1, r.Key2, r.Key3, r.Key4, r.Key5, r.Factor, r.Additive, r.EffStart, r.EffEnd, Jurisdiction = r.Jurisdiction,
+                Name = kv.Value, r.Key1, r.Key2, r.Key3, r.Key4, r.Key5, Value = r.Factor ?? r.Additive ?? 0m, r.EffStart, r.EffEnd, Jurisdiction = r.Jurisdiction,
                 Product = product, Version = version
               });
         }
@@ -107,6 +107,6 @@ record RateRowImport(
         );
     }
 
-    public object ToRateRow() => new { Key1, Key2, Key3, Key4, Key5, Factor, Additive, EffStart, EffEnd };
+    public object ToRateRow() => new { Key1, Key2, Key3, Key4, Key5, Value = Factor ?? Additive ?? 0m, EffStart, EffEnd };
     static decimal? ParseDecimal(string? s) => decimal.TryParse(s, out var d) ? d : null;
 }

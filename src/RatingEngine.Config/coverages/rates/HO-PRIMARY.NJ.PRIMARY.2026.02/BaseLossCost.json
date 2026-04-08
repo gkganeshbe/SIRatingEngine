@@ -1,0 +1,23 @@
+[
+  {
+    "Key1": "FIRE",
+    "Key2": "OWNER",
+    "Key3": "Z1",
+    "Value": 120.0,
+    "EffStart": "2026-01-01"
+  },
+  {
+    "Key1": "FIRE",
+    "Key2": "TENANT",
+    "Key3": "Z1",
+    "Value": 150.0,
+    "EffStart": "2026-01-01"
+  },
+  {
+    "Key1": "HURRICANE",
+    "Key2": "OWNER",
+    "Key3": "Z1",
+    "Value": 200.0,
+    "EffStart": "2026-01-01"
+  }
+]

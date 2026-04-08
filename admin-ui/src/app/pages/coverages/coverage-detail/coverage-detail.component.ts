@@ -1,4 +1,5 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { isExpired } from '../../../core/utils/date.utils';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
@@ -30,54 +31,237 @@ import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-d
     MatChipsModule, MatCardModule, MatProgressSpinnerModule,
     MatDialogModule, MatTooltipModule, MatBadgeModule, MatSnackBarModule,
   ],
+  styles: [`
+    .detail-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 16px;
+      padding: 16px 0;
+    }
+    .detail-block {
+      background: #fafafa;
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      padding: 12px 16px;
+    }
+    .detail-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: rgba(0,0,0,.42);
+      margin-bottom: 6px;
+    }
+    .agg-card {
+      background: #f1f8e9;
+      border: 1px solid #a5d6a7;
+      border-radius: 6px;
+      padding: 12px 16px;
+      grid-column: 1 / -1;
+    }
+  `],
   template: `
     <div class="page-container" *ngIf="coverage">
-      <!-- Breadcrumb -->
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;color:rgba(0,0,0,.6)">
-        <a routerLink="/products" style="color:inherit;text-decoration:none">Products</a>
+
+      <!-- Slim header -->
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;color:rgba(0,0,0,.6);flex-wrap:wrap">
+        <a routerLink="/coverages" style="color:inherit;text-decoration:none">Coverage Mapping</a>
         <mat-icon style="font-size:16px;width:16px;height:16px">chevron_right</mat-icon>
-        <a [routerLink]="['/products', productId]"
-           [queryParams]="{ pc: coverage.productCode, v: coverage.version }"
-           style="color:inherit;text-decoration:none">{{coverage.productCode}}</a>
-        <mat-icon style="font-size:16px;width:16px;height:16px">chevron_right</mat-icon>
-        <span>{{coverage.coverageCode}} v{{coverage.version}}</span>
-        <span *ngIf="coverage.state !== '*'" style="margin-left:4px">
-          <mat-chip>{{coverage.state}}</mat-chip>
+        <span style="font-weight:600;color:rgba(0,0,0,.87)">
+          {{coverage.productCode}} &mdash; {{coverage.coverageCode}}
         </span>
+        <mat-chip>{{coverage.state === '*' ? 'All States' : coverage.state}}</mat-chip>
+        <mat-chip>v{{coverage.version}}</mat-chip>
+        <mat-chip *ngIf="isExpired(coverage.expireAt)"
+                  style="background:#ffebee;color:#c62828;border:1px solid #ef9a9a">
+          Expired {{coverage.expireAt}}
+        </mat-chip>
+        <mat-chip *ngIf="!isExpired(coverage.expireAt)"
+                  style="background:#e8f5e9;color:#2e7d32;border:1px solid #a5d6a7">
+          Active
+        </mat-chip>
       </div>
 
-      <!-- Header card -->
-      <mat-card style="margin-bottom:16px">
-        <mat-card-content style="display:flex;align-items:center;gap:24px;flex-wrap:wrap">
-          <div>
-            <div style="font-size:11px;color:rgba(0,0,0,.6)">Eff Start</div>
-            <strong>{{coverage.effStart}}</strong>
-          </div>
-          <div *ngIf="coverage.expireAt">
-            <div style="font-size:11px;color:rgba(0,0,0,.6)">Expires</div>
-            <strong style="color:#f44336">{{coverage.expireAt}}</strong>
-          </div>
-          <div>
-            <div style="font-size:11px;color:rgba(0,0,0,.6)">Perils</div>
-            <div class="peril-chips">
-              <mat-chip *ngFor="let p of coverage.perils" color="primary" highlighted>{{p}}</mat-chip>
+      <!-- Tab bar -->
+      <mat-tab-group animationDuration="150ms" [selectedIndex]="initialTab">
+
+        <!-- ── Tab 0: Coverage Details ─────────────────────────────────── -->
+        <mat-tab>
+          <ng-template mat-tab-label>
+            <mat-icon style="margin-right:4px">info_outline</mat-icon>
+            Coverage Details
+          </ng-template>
+
+          <div class="detail-grid">
+
+            <!-- Effective dates -->
+            <div class="detail-block">
+              <div class="detail-label">Effective Dates</div>
+              <div style="font-size:13px">
+                <span style="color:rgba(0,0,0,.54);font-size:11px">From &nbsp;</span>
+                <strong>{{coverage.effStart}}</strong>
+              </div>
+              <div *ngIf="isExpired(coverage.expireAt)" style="font-size:13px;margin-top:4px">
+                <span style="color:rgba(0,0,0,.54);font-size:11px">Expires </span>
+                <strong style="color:#c62828">{{coverage.expireAt}}</strong>
+              </div>
+              <div *ngIf="!isExpired(coverage.expireAt)" style="font-size:12px;color:rgba(0,0,0,.38);margin-top:4px">
+                No expiry &mdash; Active
+              </div>
             </div>
-          </div>
-          <span class="spacer"></span>
-          <div style="font-size:11px;color:rgba(0,0,0,.6);text-align:right">
-            Created by {{coverage.createdBy ?? '—'}} on {{coverage.createdAt | date:'mediumDate'}}
-          </div>
-        </mat-card-content>
-      </mat-card>
 
-      <!-- Tabs -->
-      <mat-tab-group animationDuration="150ms">
+            <!-- Perils -->
+            <div class="detail-block">
+              <div class="detail-label">Perils</div>
+              <div class="peril-chips" style="margin-top:4px">
+                <mat-chip *ngFor="let p of coverage.perils" color="primary" highlighted>{{p}}</mat-chip>
+                <span *ngIf="!coverage.perils.length" style="font-size:12px;color:rgba(0,0,0,.38)">None declared</span>
+              </div>
+            </div>
 
-        <!-- ── Pipeline Tab ─────────────────────────────────────────────── -->
+            <!-- Depends On -->
+            <div class="detail-block" *ngIf="coverage.dependsOn.length">
+              <div class="detail-label">Depends On</div>
+              <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px">
+                <mat-chip *ngFor="let d of coverage.dependsOn"
+                          [matTooltip]="'Reads cov_' + d + '_Premium from the risk bag'">
+                  {{d}}
+                </mat-chip>
+              </div>
+            </div>
+
+            <!-- Publishes -->
+            <div class="detail-block" *ngIf="coverage.publish.length">
+              <div class="detail-label">Publishes</div>
+              <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px">
+                <mat-chip *ngFor="let k of coverage.publish"
+                          [matTooltip]="'Risk bag key exported for downstream: $risk.' + k">
+                  {{k}}
+                </mat-chip>
+              </div>
+            </div>
+
+            <!-- Metadata -->
+            <div class="detail-block">
+              <div class="detail-label">Metadata</div>
+              <div style="font-size:12px;color:rgba(0,0,0,.6);margin-top:4px">
+                Created by <strong>{{coverage.createdBy ?? '—'}}</strong>
+              </div>
+              <div style="font-size:12px;color:rgba(0,0,0,.6);margin-top:2px">
+                on {{coverage.createdAt | date:'mediumDate'}}
+              </div>
+            </div>
+
+            <!-- Aggregate rules — full-width -->
+            <div class="agg-card" *ngIf="coverage.aggregate">
+              <div style="display:flex;align-items:center;gap:6px;font-weight:600;color:#2e7d32;margin-bottom:8px">
+                <mat-icon style="font-size:18px;width:18px;height:18px;color:#2e7d32">merge_type</mat-icon>
+                Aggregate Mode
+              </div>
+              <div style="font-size:13px;margin-bottom:8px">
+                When
+                <code style="background:rgba(0,0,0,.07);padding:2px 6px;border-radius:3px">
+                  {{coverage.aggregate.whenPath}} {{coverage.aggregate.whenOp}} '{{coverage.aggregate.whenValue}}'
+                </code>
+              </div>
+              <div style="display:flex;flex-wrap:wrap;gap:6px">
+                <span *ngFor="let f of coverage.aggregate.fields"
+                      style="background:#a5d6a7;color:#1b5e20;border-radius:10px;padding:2px 10px;font-size:12px"
+                      [matTooltip]="f.aggFunction + '(' + f.sourceField + ') → $risk.' + f.resultKey">
+                  {{f.aggFunction}}({{f.sourceField}}) → {{f.resultKey}}
+                </span>
+              </div>
+            </div>
+
+          </div>
+        </mat-tab>
+
+        <!-- ── Tab 1: Rate Tables ──────────────────────────────────────── -->
+        <mat-tab>
+          <ng-template mat-tab-label>
+            <mat-icon style="margin-right:4px">table_chart</mat-icon>
+            Rate Tables
+            <span style="margin-left:6px;background:rgba(0,0,0,.12);border-radius:10px;padding:0 6px;font-size:11px">
+              {{rateTables.length}}
+            </span>
+          </ng-template>
+
+          <div style="padding:16px 0">
+            <div class="action-bar">
+              <span style="color:rgba(0,0,0,.6);font-size:13px">
+                Rate tables store the factors used by pipeline lookup steps. Click a table to view rows or upload via Excel.
+              </span>
+              <span class="spacer"></span>
+              <button mat-flat-button color="primary" (click)="addRateTable()">
+                <mat-icon>add</mat-icon> New Rate Table
+              </button>
+            </div>
+
+            <mat-card *ngIf="tablesLoading" style="text-align:center;padding:32px">
+              <mat-spinner diameter="36" style="margin:auto"></mat-spinner>
+            </mat-card>
+
+            <div *ngIf="!tablesLoading && rateTables.length === 0"
+                 style="color:rgba(0,0,0,.38);padding:48px;text-align:center">
+              <mat-icon style="font-size:36px;width:36px;height:36px;margin-bottom:12px">table_chart</mat-icon>
+              <p style="margin:0 0 4px;font-size:15px">No rate tables yet</p>
+              <p style="margin:0;font-size:12px">Create rate tables to store the factors that pipeline lookup steps will reference.</p>
+            </div>
+
+            <table mat-table [dataSource]="rateTables"
+                   *ngIf="!tablesLoading && rateTables.length > 0" style="width:100%">
+              <ng-container matColumnDef="name">
+                <th mat-header-cell *matHeaderCellDef>Name</th>
+                <td mat-cell *matCellDef="let t">
+                  <span style="cursor:pointer;font-weight:500;color:#3f51b5"
+                        (click)="openRateTable(t)">{{t.name}}</span>
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="lookupType">
+                <th mat-header-cell *matHeaderCellDef>Lookup Type</th>
+                <td mat-cell *matCellDef="let t"><mat-chip>{{t.lookupType}}</mat-chip></td>
+              </ng-container>
+              <ng-container matColumnDef="description">
+                <th mat-header-cell *matHeaderCellDef>Description</th>
+                <td mat-cell *matCellDef="let t">{{t.description ?? '—'}}</td>
+              </ng-container>
+              <ng-container matColumnDef="effStart">
+                <th mat-header-cell *matHeaderCellDef>Eff Start</th>
+                <td mat-cell *matCellDef="let t">{{t.effStart}}</td>
+              </ng-container>
+              <ng-container matColumnDef="expireAt">
+                <th mat-header-cell *matHeaderCellDef>Expires</th>
+                <td mat-cell *matCellDef="let t">
+                  <mat-chip *ngIf="isExpired(t.expireAt)" color="warn" highlighted>{{t.expireAt}}</mat-chip>
+                  <span *ngIf="!isExpired(t.expireAt)" style="color:rgba(0,0,0,.38)">—</span>
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="actions">
+                <th mat-header-cell *matHeaderCellDef></th>
+                <td mat-cell *matCellDef="let t" style="text-align:right">
+                  <button mat-icon-button matTooltip="Open rows" color="primary"
+                          (click)="openRateTable(t); $event.stopPropagation()">
+                    <mat-icon>open_in_new</mat-icon>
+                  </button>
+                  <button mat-icon-button matTooltip="Delete" color="warn"
+                          (click)="deleteRateTable(t); $event.stopPropagation()">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </td>
+              </ng-container>
+              <tr mat-header-row *matHeaderRowDef="tableColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: tableColumns;"
+                  [class.expired-row]="isExpired(row.expireAt)"
+                  style="cursor:pointer" (click)="openRateTable(row)"></tr>
+            </table>
+          </div>
+        </mat-tab>
+
+        <!-- ── Tab 2: Rating Pipeline ──────────────────────────────────── -->
         <mat-tab>
           <ng-template mat-tab-label>
             <mat-icon style="margin-right:4px">account_tree</mat-icon>
-            Pipeline
+            Rating Pipeline
             <span style="margin-left:6px;background:rgba(0,0,0,.12);border-radius:10px;padding:0 6px;font-size:11px">
               {{steps.length}}
             </span>
@@ -116,28 +300,22 @@ import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-d
                     {{i + 1}}
                   </span>
 
-                  <!-- operation badge -->
                   <span [style.background]="opColor(step.operation)"
                         style="padding:2px 8px;border-radius:10px;font-size:11px;font-weight:500;color:white;white-space:nowrap">
                     {{step.operation}}
                   </span>
 
-                  <!-- step id -->
                   <code style="font-size:12px;background:rgba(0,0,0,.06);padding:2px 6px;border-radius:4px">
                     {{step.id}}
                   </code>
 
-                  <!-- step name -->
                   <span style="flex:1;font-size:13px">{{step.name}}</span>
 
-                  <!-- rate table (lookup) -->
-                  <span *ngIf="step.rateTable"
-                        style="font-size:12px;color:rgba(0,0,0,.54)">
+                  <span *ngIf="step.rateTable" style="font-size:12px;color:rgba(0,0,0,.54)">
                     <mat-icon style="font-size:14px;vertical-align:middle">table_chart</mat-icon>
                     {{step.rateTable}}
                   </span>
 
-                  <!-- when condition -->
                   <mat-icon *ngIf="step.when?.path" matTooltip="Has condition guard"
                             style="font-size:16px;color:#ff9800">filter_alt</mat-icon>
 
@@ -153,88 +331,6 @@ import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-d
           </div>
         </mat-tab>
 
-        <!-- ── Rate Tables Tab ──────────────────────────────────────────── -->
-        <mat-tab>
-          <ng-template mat-tab-label>
-            <mat-icon style="margin-right:4px">table_chart</mat-icon>
-            Rate Tables
-            <span style="margin-left:6px;background:rgba(0,0,0,.12);border-radius:10px;padding:0 6px;font-size:11px">
-              {{rateTables.length}}
-            </span>
-          </ng-template>
-
-          <div style="padding:16px 0">
-            <div class="action-bar">
-              <span style="color:rgba(0,0,0,.6);font-size:13px">
-                Rate tables store the factors used by pipeline lookup steps. Click a table name to view or edit its rows.
-              </span>
-              <span class="spacer"></span>
-              <button mat-flat-button color="primary" (click)="addRateTable()">
-                <mat-icon>add</mat-icon> New Rate Table
-              </button>
-            </div>
-
-            <mat-card *ngIf="tablesLoading" style="text-align:center;padding:32px">
-              <mat-spinner diameter="36" style="margin:auto"></mat-spinner>
-            </mat-card>
-
-            <div *ngIf="!tablesLoading && rateTables.length === 0"
-                 style="color:rgba(0,0,0,.38);padding:48px;text-align:center">
-              <mat-icon style="font-size:36px;width:36px;height:36px;margin-bottom:12px">table_chart</mat-icon>
-              <p style="margin:0 0 4px;font-size:15px">No rate tables yet</p>
-              <p style="margin:0;font-size:12px">Create rate tables to store the factors that pipeline lookup steps will reference.</p>
-            </div>
-
-            <table mat-table [dataSource]="rateTables" *ngIf="!tablesLoading && rateTables.length > 0" style="width:100%">
-              <ng-container matColumnDef="name">
-                <th mat-header-cell *matHeaderCellDef>Name</th>
-                <td mat-cell *matCellDef="let t">
-                  <a style="cursor:pointer;color:inherit;font-weight:500" (click)="openRateTable(t)">
-                    {{t.name}}
-                  </a>
-                </td>
-              </ng-container>
-              <ng-container matColumnDef="lookupType">
-                <th mat-header-cell *matHeaderCellDef>Lookup Type</th>
-                <td mat-cell *matCellDef="let t">
-                  <mat-chip>{{t.lookupType}}</mat-chip>
-                </td>
-              </ng-container>
-              <ng-container matColumnDef="description">
-                <th mat-header-cell *matHeaderCellDef>Description</th>
-                <td mat-cell *matCellDef="let t">{{t.description ?? '—'}}</td>
-              </ng-container>
-              <ng-container matColumnDef="effStart">
-                <th mat-header-cell *matHeaderCellDef>Eff Start</th>
-                <td mat-cell *matCellDef="let t">{{t.effStart}}</td>
-              </ng-container>
-              <ng-container matColumnDef="expireAt">
-                <th mat-header-cell *matHeaderCellDef>Expires</th>
-                <td mat-cell *matCellDef="let t">
-                  <mat-chip *ngIf="t.expireAt" color="warn" highlighted>{{t.expireAt}}</mat-chip>
-                  <span *ngIf="!t.expireAt" style="color:rgba(0,0,0,.38)">—</span>
-                </td>
-              </ng-container>
-              <ng-container matColumnDef="actions">
-                <th mat-header-cell *matHeaderCellDef></th>
-                <td mat-cell *matCellDef="let t" style="text-align:right">
-                  <button mat-icon-button matTooltip="Open rows" color="primary"
-                          (click)="openRateTable(t)">
-                    <mat-icon>open_in_new</mat-icon>
-                  </button>
-                  <button mat-icon-button matTooltip="Delete" color="warn"
-                          (click)="deleteRateTable(t)">
-                    <mat-icon>delete</mat-icon>
-                  </button>
-                </td>
-              </ng-container>
-              <tr mat-header-row *matHeaderRowDef="tableColumns"></tr>
-              <tr mat-row *matRowDef="let row; columns: tableColumns;"
-                  [class.expired-row]="row.expireAt"
-                  style="cursor:pointer" (click)="openRateTable(row)"></tr>
-            </table>
-          </div>
-        </mat-tab>
       </mat-tab-group>
     </div>
 
@@ -244,6 +340,7 @@ import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-d
   `
 })
 export class CoverageDetailComponent implements OnInit {
+  readonly isExpired = isExpired;
   coverage: CoverageDetail | null = null;
   steps: StepConfig[] = [];
   rateTables: RateTableSummary[] = [];
@@ -253,7 +350,9 @@ export class CoverageDetailComponent implements OnInit {
   tableColumns = ['name', 'lookupType', 'description', 'effStart', 'expireAt', 'actions'];
 
   private coverageId = 0;
-  productId = 0;   // used in breadcrumb to navigate back to product
+  productId = 0;
+  /** 0 = Coverage Details, 1 = Rate Tables, 2 = Rating Pipeline */
+  initialTab = 0;
 
   constructor(
     private route: ActivatedRoute,
@@ -269,12 +368,9 @@ export class CoverageDetailComponent implements OnInit {
   ngOnInit() {
     this.coverageId = +this.route.snapshot.paramMap.get('id')!;
     this.productId  = +(this.route.snapshot.queryParamMap.get('productId') ?? 0);
-    const qp = this.route.snapshot.queryParamMap;
-    const pc = qp.get('pc')!;
-    const cc = qp.get('cc')!;
-    const v  = qp.get('v')!;
+    this.initialTab = +(this.route.snapshot.queryParamMap.get('tab') ?? 0);
 
-    this.coverageSvc.get(pc, cc, v).subscribe({
+    this.coverageSvc.get(this.coverageId).subscribe({
       next: d => {
         this.coverage = d;
         this.loading = false;
@@ -305,19 +401,23 @@ export class CoverageDetailComponent implements OnInit {
   // ── Pipeline ──────────────────────────────────────────────────────────────
 
   addStep() {
-    this.dialog.open(StepFormComponent, { width: '640px', data: { step: null } })
-      .afterClosed().subscribe((step: StepConfig | null) => {
-        if (!step) return;
-        this.pipelineSvc.addStep(this.coverageId, step).subscribe(() => this.loadSteps());
-      });
+    this.dialog.open(StepFormComponent, {
+      width: '640px',
+      data: { step: null, productCode: this.coverage?.productCode ?? '' }
+    }).afterClosed().subscribe((step: StepConfig | null) => {
+      if (!step) return;
+      this.pipelineSvc.addStep(this.coverageId, step).subscribe(() => this.loadSteps());
+    });
   }
 
   editStep(step: StepConfig, _index: number) {
-    this.dialog.open(StepFormComponent, { width: '640px', data: { step } })
-      .afterClosed().subscribe((updated: StepConfig | null) => {
-        if (!updated) return;
-        this.pipelineSvc.updateStep(this.coverageId, step.id, updated).subscribe(() => this.loadSteps());
-      });
+    this.dialog.open(StepFormComponent, {
+      width: '640px',
+      data: { step, productCode: this.coverage?.productCode ?? '' }
+    }).afterClosed().subscribe((updated: StepConfig | null) => {
+      if (!updated) return;
+      this.pipelineSvc.updateStep(this.coverageId, step.id, updated).subscribe(() => this.loadSteps());
+    });
   }
 
   deleteStep(step: StepConfig) {
@@ -334,7 +434,6 @@ export class CoverageDetailComponent implements OnInit {
     this.pipelineSvc.reorderSteps(this.coverageId, ordered).subscribe({
       next:  () => this.snack.open('Order saved', '', { duration: 2000 }),
       error: () => {
-        // Revert on failure
         moveItemInArray(this.steps, event.currentIndex, event.previousIndex);
         this.snack.open('Reorder failed', 'Dismiss', { duration: 3000 });
       }

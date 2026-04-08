@@ -1,0 +1,20 @@
+<div class="excel-paste-zone" tabindex="0" (paste)="onPaste($event)">
+  
+  <!-- Default State -->
+  <div *ngIf="parsedRows.length === 0">
+    <h3>Excel-First Upload</h3>
+    <p>Select your data block in Excel, press <strong>Ctrl+C</strong>, then click here and press <strong>Ctrl+V</strong>.</p>
+    <p class="section-title">Expected Column Order:</p>
+    <p>
+      <span *ngFor="let col of columnDefs; let last = last">
+        {{ col.displayLabel }}<span *ngIf="!last"> | </span>
+      </span>
+    </p>
+  </div>
+
+  <!-- Success State -->
+  <div *ngIf="parsedRows.length > 0">
+    <h3 style="color: green;">Successfully parsed {{ parsedRows.length }} rows!</h3>
+    <p>Review the data below and click <strong>Save</strong> to bulk upload to the engine.</p>
+  </div>
+</div>

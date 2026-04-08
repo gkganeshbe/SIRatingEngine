@@ -15,6 +15,7 @@ Log.Logger = new LoggerConfiguration()
 SqlMapper.AddTypeHandler(DateOnlyTypeHandler.Instance);
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddRatingProblemDetails();
 
 builder.Host.UseSerilog((ctx, services, lc) => lc
     .ReadFrom.Configuration(ctx.Configuration)
@@ -64,9 +65,23 @@ builder.Services.AddScoped<DbConnectionFactory>();
 // Admin repositories
 builder.Services.AddScoped<IProductAdminRepository, SqlProductAdminRepository>();
 builder.Services.AddScoped<ICoverageAdminRepository, SqlCoverageAdminRepository>();
+builder.Services.AddScoped<ICoverageRefAdminRepository, SqlCoverageRefAdminRepository>();
+builder.Services.AddScoped<ILobAdminRepository, SqlLobAdminRepository>();
 builder.Services.AddScoped<IRateTableAdminRepository, SqlRateTableAdminRepository>();
 builder.Services.AddScoped<IPipelineStepAdminRepository, SqlPipelineStepAdminRepository>();
 builder.Services.AddScoped<IColumnDefAdminRepository, SqlColumnDefAdminRepository>();
+builder.Services.AddScoped<IRiskFieldRepository, SqlRiskFieldRepository>();
+builder.Services.AddScoped<IPolicyAdjustmentAdminRepository, SqlPolicyAdjustmentAdminRepository>();
+builder.Services.AddScoped<IProductStateAdminRepository, SqlProductStateAdminRepository>();
+builder.Services.AddScoped<ILobScopeAdminRepository, SqlLobScopeAdminRepository>();
+builder.Services.AddScoped<ILookupDimensionAdminRepository, SqlLookupDimensionAdminRepository>();
+builder.Services.AddScoped<IDerivedKeyAdminRepository, SqlDerivedKeyAdminRepository>();
+
+// Rating services — used by the Testing Sandbox endpoint
+builder.Services.AddMemoryCache();
+builder.Services.AddSingleton<IPipelineFactory, JsonPipelineFactory>();
+builder.Services.AddScoped<ICoverageConfigRepository, SqlCoverageConfigRepository>();
+builder.Services.AddScoped<IRateLookupFactory, DbRateLookupFactory>();
 
 // ── Authentication / Authorization ───────────────────────────────────────────
 // Security:RequireAuth (appsettings.json) controls whether OIDC token validation
@@ -116,6 +131,7 @@ var app = builder.Build();
 
 // CORS must be first so preflight OPTIONS requests get the right headers
 app.UseCors();
+app.UseRatingProblemDetails();
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseMiddleware<TenantMiddleware>();
@@ -128,5 +144,9 @@ adminGroup.MapCoverageEndpoints();
 adminGroup.MapPipelineStepEndpoints();
 adminGroup.MapRateTableEndpoints();
 adminGroup.MapColumnDefEndpoints();
+adminGroup.MapRiskFieldEndpoints();
+adminGroup.MapPolicyAdjustmentEndpoints();
+adminGroup.MapLookupEndpoints();
+adminGroup.MapTestEndpoints();
 
 app.Run();

@@ -10,17 +10,18 @@ public static class PipelineStepEndpoints
         var group = app.MapGroup("/admin/coverages/{coverageId:int}/pipeline").WithTags("Pipeline Steps");
 
         // GET /admin/coverages/{coverageId}/pipeline/steps
-        group.MapGet("/steps", async (int coverageId, IPipelineStepAdminRepository repo) =>
-            Results.Ok(await repo.ListStepsAsync(coverageId)));
+        group.MapGet("/steps", async (int coverageId, IPipelineStepAdminRepository repo, CancellationToken cancellationToken) =>
+            Results.Ok(await repo.ListStepsAsync(coverageId, cancellationToken)));
 
         // POST /admin/coverages/{coverageId}/pipeline/steps
         // Body: AddPipelineStepRequest { Step: StepConfig, InsertAfterOrder?: int }
         group.MapPost("/steps", async (
             int coverageId,
             AddPipelineStepRequest req,
-            IPipelineStepAdminRepository repo) =>
+            IPipelineStepAdminRepository repo,
+            CancellationToken cancellationToken) =>
         {
-            var dbId = await repo.AddStepAsync(coverageId, req.Step, req.InsertAfterOrder);
+            var dbId = await repo.AddStepAsync(coverageId, req.Step, req.InsertAfterOrder, cancellationToken);
             return Results.Created($"/admin/coverages/{coverageId}/pipeline/steps/{req.Step.Id}", new { dbId, stepId = req.Step.Id });
         });
 
@@ -29,24 +30,27 @@ public static class PipelineStepEndpoints
             int coverageId,
             string stepId,
             StepConfig req,
-            IPipelineStepAdminRepository repo) =>
-            await repo.UpdateStepAsync(coverageId, stepId, req) ? Results.Ok() : Results.NotFound());
+            IPipelineStepAdminRepository repo,
+            CancellationToken cancellationToken) =>
+            await repo.UpdateStepAsync(coverageId, stepId, req, cancellationToken) ? Results.Ok() : Results.NotFound());
 
         // DELETE /admin/coverages/{coverageId}/pipeline/steps/{stepId}
         group.MapDelete("/steps/{stepId}", async (
             int coverageId,
             string stepId,
-            IPipelineStepAdminRepository repo) =>
-            await repo.DeleteStepAsync(coverageId, stepId) ? Results.NoContent() : Results.NotFound());
+            IPipelineStepAdminRepository repo,
+            CancellationToken cancellationToken) =>
+            await repo.DeleteStepAsync(coverageId, stepId, cancellationToken) ? Results.NoContent() : Results.NotFound());
 
         // PUT /admin/coverages/{coverageId}/pipeline/reorder
         // Body: ReorderStepsRequest { OrderedStepIds: ["S1","S3","S2",...] }
         group.MapPut("/reorder", async (
             int coverageId,
             ReorderStepsRequest req,
-            IPipelineStepAdminRepository repo) =>
+            IPipelineStepAdminRepository repo,
+            CancellationToken cancellationToken) =>
         {
-            await repo.ReorderStepsAsync(coverageId, req.OrderedStepIds);
+            await repo.ReorderStepsAsync(coverageId, req.OrderedStepIds, cancellationToken);
             return Results.Ok();
         });
 

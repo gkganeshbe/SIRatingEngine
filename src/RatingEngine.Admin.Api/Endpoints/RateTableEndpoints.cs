@@ -107,14 +107,14 @@ public static class RateTableEndpoints
             ExpireRequest req,
             IRateTableAdminRepository repo,
             CancellationToken cancellationToken) =>
-            await repo.ExpireRowAsync(rowId, req.ExpireAt, cancellationToken) ? Results.Ok() : Results.NotFound());
+            await repo.ExpireRowAsync(coverageId, name, rowId, req.ExpireAt, cancellationToken) ? Results.Ok() : Results.NotFound());
 
         // DELETE /admin/coverages/{coverageId}/rate-tables/{name}/rows/{rowId}
         group.MapDelete("/{name}/rows/{rowId:long}", async (
             int coverageId, string name, long rowId,
             IRateTableAdminRepository repo,
             CancellationToken cancellationToken) =>
-            await repo.DeleteRowAsync(rowId, cancellationToken) ? Results.NoContent() : Results.NotFound());
+            await repo.DeleteRowAsync(coverageId, name, rowId, cancellationToken) ? Results.NoContent() : Results.NotFound());
 
         return app;
     }

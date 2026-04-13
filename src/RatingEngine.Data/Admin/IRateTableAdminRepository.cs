@@ -11,7 +11,7 @@ public interface IRateTableAdminRepository
     Task<IReadOnlyList<RateTableRowDetail>> GetRowsAsync(int coverageConfigId, string tableName, DateOnly? effectiveDate = null, CancellationToken cancellationToken = default);
     Task<long> AddRowAsync(int coverageConfigId, string tableName, CreateRateTableRowRequest request, CancellationToken cancellationToken = default);
     Task<bool> UpdateRowAsync(int coverageConfigId, string tableName, long rowId, CreateRateTableRowRequest request, CancellationToken cancellationToken = default);
-    Task<bool> ExpireRowAsync(long rowId, DateOnly expireAt, CancellationToken cancellationToken = default);
-    Task<bool> DeleteRowAsync(long rowId, CancellationToken cancellationToken = default);
+    Task<bool> ExpireRowAsync(int coverageConfigId, string tableName, long rowId, DateOnly expireAt, CancellationToken cancellationToken = default);
+    Task<bool> DeleteRowAsync(int coverageConfigId, string tableName, long rowId, CancellationToken cancellationToken = default);
     Task<int> BulkInsertRowsAsync(int coverageConfigId, string tableName, IReadOnlyList<CreateRateTableRowRequest> rows, CancellationToken cancellationToken = default);
 }

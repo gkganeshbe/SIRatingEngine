@@ -1,55 +1,84 @@
 import { Injectable } from '@angular/core';
-import { OAuthService, AuthConfig } from 'angular-oauth2-oidc';
-import { BehaviorSubject } from 'rxjs';
+import { Router } from '@angular/router';
+import { AuthConfig, OAuthService } from 'angular-oauth2-oidc';
+import { BehaviorSubject, Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
-@Injectable({ providedIn: 'root' })
+function buildAuthConfig(): AuthConfig {
+  const oidc = environment.oidc;
+  return {
+    issuer:               oidc.issuer,
+    redirectUri:          oidc.redirectUri,
+    postLogoutRedirectUri: oidc.postLogoutRedirectUri,
+    clientId:             oidc.clientId,
+    responseType:         'code',
+    scope:                oidc.scope,
+    requireHttps:         false,  // Allow http identity servers (local IIS)
+    showDebugInformation: oidc.showDebugInformation ?? false,
+
+    // Do not compare the issuer in the discovery document against the
+    // configured issuer URL. Local IIS deployments often return a different
+    // scheme/port/trailing-slash than what the client has configured.
+    strictDiscoveryDocumentValidation: false,
+    skipIssuerCheck: true,
+  };
+}
+
+@Injectable({
+  providedIn: 'root'
+})
 export class AuthService {
-  private _userName = new BehaviorSubject<string>('');
-  userName$ = this._userName.asObservable();
+  private userNameSubject = new BehaviorSubject<string>('');
+  public userName$: Observable<string> = this.userNameSubject.asObservable();
 
-  constructor(private oauthService: OAuthService) {}
+  constructor(private oauthService: OAuthService, private router: Router) {}
 
-  init() {
-    // Skip OIDC in non-production environments — API runs with RequireAuth:false
-    if (!environment.production) return;
+  public init(): void {
+    this.oauthService.configure(buildAuthConfig());
+    this.oauthService.setupAutomaticSilentRefresh();
 
-    const config: AuthConfig = {
-      issuer:                environment.oidc.issuer,
-      clientId:              environment.oidc.clientId,
-      scope:                 environment.oidc.scope,
-      responseType:          'code',
-      redirectUri:           environment.oidc.redirectUri,
-      postLogoutRedirectUri: environment.oidc.postLogoutRedirectUri,
-      showDebugInformation:  environment.oidc.showDebugInformation,
-      useSilentRefresh:      false,
-    };
-
-    this.oauthService.configure(config);
+    // Load the discovery document and complete the code exchange if the browser
+    // is returning from the identity server (?code=... in the URL).
+    // Errors are caught so a transient discovery failure does not break the app —
+    // the user can still click "Continue to Sign In" to retry.
     this.oauthService.loadDiscoveryDocumentAndTryLogin()
       .then(() => {
         if (this.oauthService.hasValidAccessToken()) {
-          const claims = this.oauthService.getIdentityClaims() as Record<string, string>;
-          this._userName.next(claims?.['name'] ?? claims?.['email'] ?? 'User');
+          this.loadUserProfile();
+
+          // If we just finished processing an OIDC callback, navigate away from login/callback
+          // to prevent the user from being stuck on the Tenant ID selection screen.
+          if (window.location.search.includes('code=') || this.router.url.includes('/login') || this.router.url.includes('/callback')) {
+            this.router.navigateByUrl('/products');
+          }
         }
       })
-      .catch(() => {
-        console.info('[Auth] OIDC discovery unavailable — running in unauthenticated dev mode.');
-      });
+      .catch(err => console.warn('[Auth] Discovery document load failed on startup:', err));
   }
 
-  login()  { if (environment.production) this.oauthService.initCodeFlow(); }
-  logout() { if (environment.production) this.oauthService.logOut(); }
+  public login(): void {
+    // Re-fetch the discovery document then redirect to the identity server.
+    // This makes login work even when the initial document load at startup
+    // failed — the button click always does a fresh fetch before redirecting.
+    this.oauthService.loadDiscoveryDocumentAndLogin();
+  }
 
-  get token():  string  {
-    return environment.production ? this.oauthService.getAccessToken() : '';
+  public logout(): void {
+    this.oauthService.logOut();
   }
-  get userId(): string  {
-    if (!environment.production) return '';
-    const claims = this.oauthService.getIdentityClaims() as Record<string, string>;
-    return claims?.['sub'] ?? claims?.['email'] ?? '';
+
+  public isAuthenticated(): boolean {
+    return this.oauthService.hasValidAccessToken();
   }
-  get isLoggedIn(): boolean {
-    return environment.production ? this.oauthService.hasValidAccessToken() : true;
+
+  public getAccessToken(): string {
+    return this.oauthService.getAccessToken();
+  }
+
+  private loadUserProfile(): void {
+    const claims: any = this.oauthService.getIdentityClaims();
+    if (claims) {
+      this.userNameSubject.next(claims['name'] || claims['preferred_username'] || claims['sub'] || 'Admin User');
+    }
   }
 }

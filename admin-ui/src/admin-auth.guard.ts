@@ -1,6 +1,6 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
-// import { AuthService } from '../services/auth.service';
+import { AuthService } from './app/core/services/auth.service';
 
 /**
  * Enforces authentication checking on Admin UI routes to prevent unauthorized 
@@ -8,13 +8,9 @@ import { CanActivateFn, Router } from '@angular/router';
  */
 export const adminAuthGuard: CanActivateFn = (route, state) => {
   const router = inject(Router);
-  // const authService = inject(AuthService);
+  const authService = inject(AuthService);
   
-  // NOTE: Transition this to use authService.isAuthenticated() 
-  // to resolve the 'Medium' severity review finding regarding direct storage reads.
-  const token = localStorage.getItem('access_token') || sessionStorage.getItem('access_token');
-  
-  if (token) {
+  if (authService.isAuthenticated()) {
     // Additional validation (e.g. JWT expiration check) should occur here
     return true;
   }

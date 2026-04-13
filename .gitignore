@@ -23,6 +23,11 @@ project.fragment.lock.json
 *.sln.docstates
 *.userprefs
 
+# ── ReSharper ─────────────────────────────────────────────────────────────────
+_ReSharper*/
+*.DotSettings.user
+.resharper/
+
 # ── Rider ─────────────────────────────────────────────────────────────────────
 .idea/
 *.sln.iml
@@ -39,6 +44,7 @@ coverage/
 *.coverage
 *.coveragexml
 *.trx
+BenchmarkDotNet.Artifacts/
 
 # ── Publish profiles ──────────────────────────────────────────────────────────
 **/Properties/PublishProfiles/
@@ -50,11 +56,24 @@ appsettings.*.local.json
 *.env
 .env
 secrets.json
+# .NET user secrets (stored outside repo at %APPDATA%\Microsoft\UserSecrets\)
+# — listed here as a reminder; they are never inside the repo
+
+# ── Certificates & private keys (never commit these) ──────────────────────────
+*.pfx
+*.p12
+*.pem
+*.key
+*.crt
+*.cer
+*.csr
 
 # ── OS artifacts ──────────────────────────────────────────────────────────────
 .DS_Store
 Thumbs.db
 desktop.ini
+ehthumbs.db
+$RECYCLE.BIN/
 
 # ── Logs ──────────────────────────────────────────────────────────────────────
 *.log
@@ -70,3 +89,11 @@ admin-ui/node_modules/
 admin-ui/dist/
 admin-ui/.angular/
 admin-ui/.cache/
+admin-ui/.npm/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnp.*
+# Local environment overrides (environment.ts and environment.prod.ts are committed;
+# a developer-local override should never be)
+admin-ui/src/environments/environment.local.ts

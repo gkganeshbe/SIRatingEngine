@@ -616,6 +616,29 @@ export interface UpdateDerivedKeyRequest {
   description: string | null;
 }
 
+// ── User Management ───────────────────────────────────────────────────────────
+
+export interface UserSummary {
+  id: string;
+  email: string;
+  firstName: string | null;
+  lastName: string | null;
+  roles: string[];
+  createdAt: string;
+}
+
+export interface CreateUserRequest {
+  email: string;
+  password: string;
+  firstName: string | null;
+  lastName: string | null;
+  roles: string[];
+}
+
+export interface ResetPasswordRequest {
+  newPassword: string;
+}
+
 // ── Testing Sandbox ───────────────────────────────────────────────────────────
 
 export interface AdminTestRateRequest {

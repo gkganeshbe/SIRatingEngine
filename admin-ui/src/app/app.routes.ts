@@ -9,6 +9,13 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/login/login.component')
       .then(m => m.LoginComponent)
   },
+  {
+    // Explicit callback route to bypass adminAuthGuard during OIDC redirect
+    // and avoid a premature redirect to /login before the token exchange finishes.
+    path: 'callback',
+    loadComponent: () => import('./pages/login/login.component')
+      .then(m => m.LoginComponent)
+  },
 
   // ── Protected routes — all guarded by adminAuthGuard ─────────────────────
   {
@@ -66,6 +73,11 @@ export const routes: Routes = [
         path: 'test-rating',
         loadComponent: () => import('./pages/test-rating/test-rating-page.component')
           .then(m => m.TestRatingPageComponent)
+      },
+      {
+        path: 'users',
+        loadComponent: () => import('./pages/users/user-list.component')
+          .then(m => m.UserListComponent)
       },
     ]
   },

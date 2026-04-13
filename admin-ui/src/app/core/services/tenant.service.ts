@@ -5,7 +5,12 @@ import { environment } from '../../../environments/environment';
 export class TenantService {
   readonly tenants = environment.tenants;
 
-  private _tenantId: string = localStorage.getItem('re_tenant_id') ?? (environment.tenants[0]?.id ?? '');
+  private _tenantId: string = (() => {
+    const stored = localStorage.getItem('re_tenant_id');
+    const knownIds = environment.tenants.map(t => t.id);
+    // If the stored value is no longer in the known tenant list, discard it
+    return stored && knownIds.includes(stored) ? stored : (environment.tenants[0]?.id ?? '');
+  })();
 
   get tenantId(): string { return this._tenantId; }
 

@@ -302,7 +302,11 @@ public sealed class SqlPolicyAdjustmentAdminRepository : IPolicyAdjustmentAdminR
         }
     }
 
-    // ── Shared with SqlCoverageAdminRepository ─────────────────────────────────
+    // ── Shared with SqlCoverageAdminRepository / PgSql implementations ────────
+
+    /// <summary>Exposed as internal static so PostgreSQL sibling can reuse.</summary>
+    internal static (string? path, string? op, string? val) ExtractWhenStatic(WhenConfig? when)
+        => ExtractWhen(when);
 
     private static (string? path, string? op, string? val) ExtractWhen(WhenConfig? when)
     {

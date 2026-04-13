@@ -1,7 +1,8 @@
 import { Component, OnInit } from '@angular/core';
-import { RouterModule, RouterOutlet } from '@angular/router';
+import { RouterModule, RouterOutlet, Router, NavigationEnd } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { filter } from 'rxjs/operators';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatListModule } from '@angular/material/list';
@@ -23,7 +24,11 @@ import { TenantService } from './core/services/tenant.service';
     MatSelectModule, MatTooltipModule,
   ],
   template: `
-    <mat-sidenav-container style="height:100%">
+    <!-- Login page: full-screen, no shell -->
+    <router-outlet *ngIf="isLoginPage" />
+
+    <!-- Authenticated shell: sidenav + toolbar -->
+    <mat-sidenav-container *ngIf="!isLoginPage" style="height:100%">
       <mat-sidenav mode="side" opened style="width:220px">
         <mat-toolbar color="primary" style="height:64px">
           <span style="font-size:15px;font-weight:500;line-height:1.2">Rating Engine<br><small style="font-weight:300">Admin Portal</small></span>
@@ -49,6 +54,10 @@ import { TenantService } from './core/services/tenant.service';
           <a mat-list-item routerLink="/test-rating" routerLinkActive="active-link">
             <mat-icon matListItemIcon>science</mat-icon>
             <span matListItemTitle>Validation &amp; Testing</span>
+          </a>
+          <a mat-list-item routerLink="/users" routerLinkActive="active-link">
+            <mat-icon matListItemIcon>group</mat-icon>
+            <span matListItemTitle>Users</span>
           </a>
         </mat-nav-list>
       </mat-sidenav>
@@ -100,15 +109,27 @@ export class AppComponent implements OnInit {
   tenants = this.tenantService.tenants;
   selectedTenantId = this.tenantService.tenantId;
   userName = '';
+  isLoginPage = false;
 
   constructor(
     public auth: AuthService,
-    private tenantService: TenantService
+    private tenantService: TenantService,
+    private router: Router
   ) {}
 
   ngOnInit() {
     this.auth.init();
     this.auth.userName$.subscribe(n => this.userName = n);
+
+    // Track the active route so the login page renders without the app shell
+    this.router.events
+      .pipe(filter(e => e instanceof NavigationEnd))
+      .subscribe((e: NavigationEnd) => {
+        this.isLoginPage = e.urlAfterRedirects.startsWith('/login');
+      });
+
+    // Handle the initial navigation (page load / hard refresh)
+    this.isLoginPage = this.router.url.startsWith('/login');
   }
 
   onTenantChange(id: string) {

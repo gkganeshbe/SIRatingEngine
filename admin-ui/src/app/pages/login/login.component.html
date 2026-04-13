@@ -1,0 +1,42 @@
+<div class="login-container">
+  <div class="login-background"></div>
+
+  <mat-card class="login-card">
+    <mat-card-header>
+      <div class="logo-placeholder">
+        <mat-icon class="logo-icon">account_balance</mat-icon>
+      </div>
+      <mat-card-title>SI Rating Engine</mat-card-title>
+      <mat-card-subtitle>Sign in to manage rating configurations</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
+
+        <div *ngIf="error" class="error-message">
+          <mat-icon>error_outline</mat-icon>
+          <span>{{ error }}</span>
+        </div>
+
+        <p class="hint-text">
+          Select your tenant, then you will be redirected to the identity provider to complete sign-in.
+        </p>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Tenant ID</mat-label>
+          <input matInput formControlName="tenantId" placeholder="e.g., tenant-acme">
+          <mat-icon matPrefix>domain</mat-icon>
+          <mat-error *ngIf="loginForm.get('tenantId')?.hasError('required')">Tenant ID is required</mat-error>
+        </mat-form-field>
+
+        <button mat-flat-button color="primary" type="submit"
+                [disabled]="loginForm.invalid || isLoading"
+                class="submit-button">
+          <mat-icon>login</mat-icon>
+          <span>{{ isLoading ? 'Redirecting...' : 'Continue to Sign In' }}</span>
+        </button>
+
+      </form>
+    </mat-card-content>
+  </mat-card>
+</div>
